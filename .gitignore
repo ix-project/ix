@@ -1,0 +1,11 @@
+*~
+*.a
+*.d
+*.o
+.depend
+
+/deps/dpdk
+/deps/dune
+/ix.conf
+/dp/ix
+/apps/echoserver
