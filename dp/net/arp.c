@@ -58,6 +58,7 @@ struct pending_pkt {
 	struct mbuf		*mbuf;
 	int			len;
 	int			cpu;
+	char			dispatched;
 };
 
 struct arp_entry {
@@ -213,7 +214,10 @@ static int arp_update_mac(struct ip_addr *addr,
 	spin_lock(&pending_pkt_lock);
 	hlist_for_each(&e->pending_pkts, n) {
 		pkt = hlist_entry(n, struct pending_pkt, link);
-		cpu_run_on_one(send_pending_pkt, pkt, pkt->cpu);
+		if (!pkt->dispatched) {
+			cpu_run_on_one(send_pending_pkt, pkt, pkt->cpu);
+			pkt->dispatched = 1;
+		}
 	}
 	spin_unlock(&pending_pkt_lock);
 
@@ -470,6 +474,7 @@ int arp_add_pending_pkt(struct ip_addr *dst_addr, struct eth_fg *fg, struct mbuf
 	pkt->mbuf = mbuf;
 	pkt->len = len;
 	pkt->cpu = percpu_get(cpu_id);
+	pkt->dispatched = 0;
 
 	hlist_add_head(&e->pending_pkts, &pkt->link);
 	spin_unlock(&pending_pkt_lock);
