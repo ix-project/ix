@@ -104,11 +104,10 @@ static inline int arp_ip_to_idx(struct ip_addr *addr)
 	return idx;
 }
 
-static struct arp_entry *arp_lookup(struct ip_addr *addr, bool create_okay)
+static struct arp_entry *__arp_lookup(struct hlist_head *h, struct ip_addr *addr)
 {
 	struct arp_entry *e;
 	struct hlist_node *pos;
-	struct hlist_head *h = &arp_tbl[arp_ip_to_idx(addr)];
 
 	hlist_for_each(h, pos) {
 		e = hlist_entry(pos, struct arp_entry, link);
@@ -116,8 +115,26 @@ static struct arp_entry *arp_lookup(struct ip_addr *addr, bool create_okay)
 			return e;
 	}
 
+	return NULL;
+}
+
+static struct arp_entry *arp_lookup(struct ip_addr *addr, bool create_okay)
+{
+	struct arp_entry *e;
+	struct hlist_head *h = &arp_tbl[arp_ip_to_idx(addr)];
+
+	e = __arp_lookup(h, addr);
+	if (e)
+		return e;
+
 	if (create_okay) {
 		spin_lock(&arp_lock);
+
+		e = __arp_lookup(h, addr);
+		if (e) {
+			spin_unlock(&arp_lock);
+			return e;
+		}
 
 		e = (struct arp_entry *)mempool_alloc(&arp_mempool);
 		if (unlikely(!e))
