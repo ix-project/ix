@@ -74,6 +74,8 @@ static DEFINE_SPINLOCK(arp_lock);
 
 static DEFINE_SPINLOCK(pending_pkt_lock);
 
+static DEFINE_SPINLOCK(arp_send_pkt_lock);
+
 #define ARP_FLAG_RESOLVING	0x1
 #define ARP_FLAG_VALID		0x2
 #define ARP_FLAG_STATIC		0x4
@@ -360,6 +362,7 @@ int arp_lookup_mac(struct ip_addr *addr, struct eth_addr *mac)
 		return -ENOENT;
 
 	if (!(e->flags & ARP_FLAG_VALID)) {
+		spin_lock(&arp_send_pkt_lock);
 		if (!timer_pending(&e->timer)) {
 			struct eth_addr target = ETH_ADDR_BROADCAST;
 
@@ -367,6 +370,7 @@ int arp_lookup_mac(struct ip_addr *addr, struct eth_addr *mac)
 			arp_send_pkt(ARP_OP_REQUEST, addr, &target);
 			timer_add(&e->timer, NULL, ARP_RESOLVE_TIMEOUT);
 		}
+		spin_unlock(&arp_send_pkt_lock);
 		return -EAGAIN;
 	}
 
