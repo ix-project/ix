@@ -191,10 +191,12 @@ static int arp_update_mac(struct ip_addr *addr,
 	e->retries = 0;
 	timer_mod(&e->timer, NULL, ARP_REFRESH_TIMEOUT);
 
+	spin_lock(&pending_pkt_lock);
 	hlist_for_each(&e->pending_pkts, n) {
 		pkt = hlist_entry(n, struct pending_pkt, link);
 		cpu_run_on_one(send_pending_pkt, pkt, pkt->cpu);
 	}
+	spin_unlock(&pending_pkt_lock);
 
 	return 0;
 }
