@@ -165,17 +165,15 @@ static int eth_fg_assign_single_to_cpu(int fg_id, int cpu, struct rte_eth_rss_re
 #include <lwip/tcp.h>
 #include <lwip/tcp_impl.h>
 
-static void migrate_fdir(struct ix_rte_eth_dev *dev, int cpu)
+static void migrate_fdir(struct ix_rte_eth_dev *dev, struct eth_fg *cur_fg,
+			 int cpu)
 {
 	int ret;
 	int idx;
-	struct eth_fg *cur_fg;
 	struct tcp_hash_entry *he;
 	struct hlist_node *cur, *n, *tmp;
 	struct tcp_pcb *pcb;
 	struct rte_fdir_filter fdir_ftr;
-
-	cur_fg = outbound_fg();
 
 	assert(cur_fg->cur_cpu == percpu_get(cpu_id));
 	cur_fg->target_cpu = CFG.cpu[cpu];
@@ -287,8 +285,16 @@ void eth_fg_assign_to_cpu(bitmap_ptr fg_bitmap, int cpu)
 		if (fgs[i] && fgs[i]->cur_cpu == percpu_get(cpu_id))
 			break;
 
+	/* If the current core has no FG assigned, then migrate the flow
+	 * director to the destination core. */
 	if (i == ETH_MAX_TOTAL_FG)
-		migrate_fdir(eth[0], cpu);
+		migrate_fdir(eth[0], outbound_fg(), cpu);
+
+	/* Try to migrate the flow director to the destination core, if it has
+	 * been migrated to the current core at a prior stage. */
+	if (outbound_fg_remote(CFG.cpu[cpu]) &&
+	    outbound_fg_remote(CFG.cpu[cpu])->cur_cpu == percpu_get(cpu_id))
+		migrate_fdir(eth[0], outbound_fg_remote(CFG.cpu[cpu]), cpu);
 }
 
 static void transition_handler_prev(struct timer *t, struct eth_fg *cur_fg)
