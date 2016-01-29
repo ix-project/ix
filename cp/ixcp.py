@@ -503,7 +503,7 @@ def main():
         thread.start()
         print '# %f control_action %s step=%d x=x freq=%d cpus=%r x=x' % (now, step,curr_step_idx,steps[curr_step_idx]['frequency'],steps[curr_step_idx]['cpus'])
       time.sleep(.1)
-  elif args.print_power is not None:
+  elif args.print_power:
     val = rdmsr(1, MSR_RAPL_POWER_UNIT)
     energy_unit = 1.0 / (1 << ((val & ENERGY_UNIT_MASK) >> ENERGY_UNIT_OFFSET))
 
