@@ -389,12 +389,12 @@ static int parse_arguments(int argc, char *argv[], int *args_parsed)
 			config_file[sizeof(config_file) - 1] = '\0';
 			break;
 		case 'l':
-			if (*optarg < 0 || *optarg > 5) {
+			if (atoi(optarg) < 0 || atoi(optarg) > 5) {
 				fprintf(stderr, "cfg: invalid log parameter");
 				ret = -EINVAL;
 				goto fail;
 			}
-			max_loglevel = *optarg;
+			max_loglevel = atoi(optarg);
 			break;
 		default:
 			fprintf(stderr, "cfg: invalid command option %x\n", c);
