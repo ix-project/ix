@@ -27,6 +27,9 @@
 /* For struct sockaddr */
 #include <sys/socket.h>
 
+/* For pipe */
+#include <unistd.h>
+
 /* Prevent inclusion of rte_memcpy.h */
 #define _RTE_MEMCPY_X86_64_H_
 inline void *rte_memcpy(void *dst, const void *src, size_t n);
@@ -899,6 +902,7 @@ static struct ix_eth_dev_ops vf_eth_dev_ops = {
 static int rte_eal_pci_probe_one_driver(struct rte_pci_driver *dr, struct rte_pci_device *dev)
 {
 	const struct rte_pci_id *id_table;
+	int pipefd[2];
 
 	for (id_table = dr->id_table; id_table->vendor_id != 0; id_table++) {
 
@@ -927,6 +931,13 @@ static int rte_eal_pci_probe_one_driver(struct rte_pci_driver *dr, struct rte_pc
 
 		/* reference driver structure */
 		dev->driver = dr;
+
+		/* use a fake source for uio (interrupts) */
+		if (pipe(pipefd))
+			return 0;
+
+		dev->intr_handle.fd = pipefd[1];
+		dev->intr_handle.type = RTE_INTR_HANDLE_UIO;
 
 		/* call the driver devinit() function */
 		return dr->devinit(dr, dev);
