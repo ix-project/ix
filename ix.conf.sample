@@ -10,21 +10,19 @@
 ###############################################################################
 
 ## host_addr : CIDR IP address and netmask that will be assigned to
-##	the adapter once it comes up.
+##      the adapter once it comes up.
 host_addr="192.168.40.1/24"
 
 # gateway_addr : default gateway IP address
 gateway_addr="192.168.1.1"
 
 ## port : port(s) that will be bound to the application by the
-##	kernel when launching IX.
-##	You can specify multiple entries, e.g. 'port=[X, Y, Z]'
-##	FIXME: $ticket #1
+##      kernel when launching IX.
+##      You can specify multiple entries, e.g. 'port=[X, Y, Z]'
 
 port=1234
 
 ## arp : static arp entries to be added to the interface arp table
-##	FIXME: $ticket2
 #arp=(
 #  {
 #    ip : "192.168.1.2"
@@ -40,23 +38,26 @@ port=1234
 # Hardware parameters
 ###############################################################################
 
-## devices : Specifies the PCI device(s) to scan for ethernet
-##	controllers. Format is a list dddd:bb:ss.ff,... d - domain, b = bus,
-##	s = slot, f = function. Usually, `lspci | grep Ethernet` allows to see
-##	available Ethernet controllers.
-##	You can specify multiple entries, e.g. 'devices=["X","Y","Z"]'
+## devices : Specifies the PCI device ID of the adapter to bind IX with. 
+##      Should be an Intel compatible NIC (e.g. 82599, X520, X540, etc).. 
+##      See the Docs to see which adapters are currently supported.
+##      Format is a list dddd:bb:ss.ff,... d - domain, b = bus,
+##      s = slot, f = function. Usually, `lspci | grep Ethernet` allows to see
+##      available Ethernet controllers.
+##      You can specify multiple entries, e.g. 'devices=["X","Y","Z"]'
 devices="0:05:00.0"
 
-## cpu : Indicates which process unit(s) (P) this IX instance
-##	should manage. WARNING: If this setting defines multiple nodes, make
-##	sure they are part of the same NUMA socket. On most architectures, the
-##	IDs of processing units on the same socket are interleaved.
-##	Usually `lstopo` allows to see NUMA nodes topology
-##	You can specify multiple entries, e.g. 'nodes=["X","Y","Z"]'
+## cpu : Indicates which CPU process unit(s) (P) this IX instance
+##      should be bound to. 
+##      WARNING: If this setting defines multiple nodes, make sure they are
+##      part of the same NUMA socket. On most architectures, the IDs of 
+##      processing units on the same socket are interleaved.
+##      Usually `lstopo` allows to see NUMA nodes topology
+##      You can specify multiple entries, e.g. 'nodes=["X","Y","Z"]'
 cpu=0
 
 ## batch : Specifies maximum batch size of received packets to process.
-##     	Default: 64.
+##      Default: 64.
 batch=64
 
 ## loader_path : kernel loader to use with IX module:
