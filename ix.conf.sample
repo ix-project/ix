@@ -11,7 +11,7 @@
 
 ## host_addr : CIDR IP address and netmask that will be assigned to
 ##      the adapter once it comes up.
-host_addr="192.168.40.1/24"
+host_addr="192.168.40.1/16"
 
 # gateway_addr : default gateway IP address
 gateway_addr="192.168.1.1"
