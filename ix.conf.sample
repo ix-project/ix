@@ -19,27 +19,14 @@ gateway_addr="192.168.1.1"
 ## port : port(s) that will be bound to the application by the
 ##      kernel when launching IX.
 ##      You can specify multiple entries, e.g. 'port=[X, Y, Z]'
-
 port=1234
-
-## arp : static arp entries to be added to the interface arp table
-#arp=(
-#  {
-#    ip : "192.168.1.2"
-#    mac : "AA:AA:AA:AA:AA:AA"
-#  },
-#  {
-#    ip : "192.168.1.3"
-#    mac : "BB:BB:BB:BB:BB:BB"
-#  }
-#)
 
 ###############################################################################
 # Hardware parameters
 ###############################################################################
 
-## devices : Specifies the PCI device ID of the adapter to bind IX with. 
-##      Should be an Intel compatible NIC (e.g. 82599, X520, X540, etc).. 
+## devices : Specifies the PCI device ID of the adapter to bind IX with.
+##      Should be an Intel compatible NIC (e.g. 82599, X520, X540, etc)..
 ##      See the Docs to see which adapters are currently supported.
 ##      Format is a list dddd:bb:ss.ff,... d - domain, b = bus,
 ##      s = slot, f = function. Usually, `lspci | grep Ethernet` allows to see
@@ -48,9 +35,9 @@ port=1234
 devices="0:05:00.0"
 
 ## cpu : Indicates which CPU process unit(s) (P) this IX instance
-##      should be bound to. 
-##      WARNING: If this setting defines multiple nodes, make sure they are
-##      part of the same NUMA socket. On most architectures, the IDs of 
+##      should be bound to.
+##      WARNING: If this setting defines multiple nodes, make sure they ar
+##      part of the same NUMA socket. On most architectures, the IDs of
 ##      processing units on the same socket are interleaved.
 ##      Usually `lstopo` allows to see NUMA nodes topology
 ##      You can specify multiple entries, e.g. 'nodes=["X","Y","Z"]'
@@ -63,3 +50,23 @@ batch=64
 ## loader_path : kernel loader to use with IX module:
 ##
 loader_path="/lib64/ld-linux-x86-64.so.2"
+
+
+###############################################################################
+# Optional parameters
+###############################################################################
+
+## arp: allows you to manually add static arp entries in the interface arp
+## table.
+#arp=(
+#  {
+#    ip : "192.168.1.2"
+#    mac : "aa:aa:aa:aa:aa:aa"
+#  },
+#  {
+#    ip : "192.168.1.3"
+#    mac : "bb:bb:bb:bb:bb:bb"
+#  }
+#)
+
+
