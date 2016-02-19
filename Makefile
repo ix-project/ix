@@ -34,6 +34,16 @@ clean: $(CLEANDIRS)
 style:
 	astyle -A8 -T8 -p -U -H --suffix=~ -r -Q --exclude=deps --exclude=inc/lwip --exclude=dp/lwip --exclude=dp/net/tcp.c --exclude=dp/net/tcp_in.c --exclude=dp/net/tcp_out.c '*.c' '*.h'
 
+style-check:
+	$(eval TEST=$(shell astyle --dry-run --formatted -A8 -T8 -p -U -H --suffix=~ -r -Q --exclude=deps --exclude=inc/lwip --exclude=dp/lwip --exclude=dp/net/tcp.c --exclude=dp/net/tcp_in.c --exclude=dp/net/tcp_out.c '*.c' '*.h' | grep Formatted))
+	@if [ -z "$(TEST)" ] ; then\
+	    echo "success";\
+	    exit 0;\
+	else\
+	    echo "failed : $(TEST)";\
+	    exit 1;\
+	fi
+
 $(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
 
