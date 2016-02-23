@@ -260,6 +260,10 @@ STEPS_MODE_ENERGY_EFFICIENCY = 1
 STEPS_MODE_BACKGROUND_TASK = 2
 STEPS_MODE_MINMAX = 3
 
+f = open('/sys/devices/system/cpu/cpu0/topology/core_siblings_list', 'r')
+core_count = len(f.readline().split(',')) / 2
+f.close()
+
 def get_steps(mode):
   f = open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies', 'r')
   frequencies = sorted(map(int, f.readline().split()))
@@ -267,17 +271,17 @@ def get_steps(mode):
 
   steps = []
   if mode == STEPS_MODE_ENERGY_EFFICIENCY:
-    for cpus in xrange(1, 9):
+    for cpus in xrange(1, core_count + 1):
       steps.append({'cpus': range(cpus), 'frequency': frequencies[0]})
     for freq in frequencies:
-      steps.append({'cpus': range(16), 'frequency': freq})
+      steps.append({'cpus': range(core_count * 2), 'frequency': freq})
   elif mode == STEPS_MODE_BACKGROUND_TASK:
-    for cpus in xrange(1, 9):
-      steps.append({'cpus': range(cpus) + range(8, 8+cpus), 'frequency': frequencies[-2]})
-    steps.append({'cpus': range(16), 'frequency': frequencies[-1]})
+    for cpus in xrange(1, core_count + 1):
+      steps.append({'cpus': range(cpus) + range(core_count, core_count + cpus), 'frequency': frequencies[-2]})
+    steps.append({'cpus': range(core_count * 2), 'frequency': frequencies[-1]})
   elif mode == STEPS_MODE_MINMAX:
     steps.append({'cpus': [0], 'frequency': frequencies[0]})
-    steps.append({'cpus': range(16), 'frequency': frequencies[-1]})
+    steps.append({'cpus': range(core_count * 2), 'frequency': frequencies[-1]})
 
   return steps
 
@@ -288,10 +292,10 @@ def calculate_idle_threshold(steps):
   for i in xrange(1, len(steps)):
     step = steps[i]
     prv = steps[i-1]
-    if len(step['cpus']) == 16 and len(prv['cpus']) == 8:
+    if len(step['cpus']) == core_count * 2 and len(prv['cpus']) == core_count:
       idle_threshold.append(1-1/1.3)
     elif len(step['cpus']) != len(prv['cpus']):
-      idle_threshold.append(1.0/len([1 for cpu in step['cpus'] if cpu < 8]))
+      idle_threshold.append(1.0/len([1 for cpu in step['cpus'] if cpu < core_count]))
     elif step['frequency'] != turbo_frequency:
       idle_threshold.append(1.0 * (step['frequency'] - prv['frequency']) / step['frequency'])
     else:
@@ -325,7 +329,7 @@ def set_step(shmem, fg_per_cpu, step, dir, args):
   global set_step_done
 
   if dir == STEP_UP:
-    control_background_job(args, len([1 for cpu in step['cpus'] if cpu < 8]))
+    control_background_job(args, len([1 for cpu in step['cpus'] if cpu < core_count]))
 
   for directory in glob.glob('/sys/devices/system/cpu/cpu*/cpufreq/'):
     f = open('%s/scaling_governor' % directory, 'w')
@@ -338,7 +342,7 @@ def set_step(shmem, fg_per_cpu, step, dir, args):
   set_step_done = True
 
   if dir == STEP_DOWN:
-    control_background_job(args, len([1 for cpu in step['cpus'] if cpu < 8]))
+    control_background_job(args, len([1 for cpu in step['cpus'] if cpu < core_count]))
 
 def get_all_metrics(shmem, attr):
   ret = []
