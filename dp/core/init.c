@@ -51,6 +51,9 @@
 
 #include <lwip/memp.h>
 
+#define MSR_RAPL_POWER_UNIT 1542
+#define ENERGY_UNIT_MASK 0x1F00
+#define ENERGY_UNIT_OFFSET 0x08
 
 static int init_dune(void);
 static int init_cfg(void);
@@ -475,6 +478,9 @@ static int init_cfg(void)
 static int init_firstcpu(void)
 {
 	int ret;
+	unsigned long msr_val;
+	unsigned int value;
+
 	cpus_active = CFG.num_cpus;
 	cp_shmem->nr_cpus = CFG.num_cpus;
 	if (CFG.num_cpus > 1) {
@@ -486,6 +492,11 @@ static int init_firstcpu(void)
 		log_err("init: failed to initialize CPU 0\n");
 		return ret;
 	}
+
+	msr_val = rdmsr(MSR_RAPL_POWER_UNIT);
+	value = (msr_val & ENERGY_UNIT_MASK) >> ENERGY_UNIT_OFFSET;
+	energy_unit = 1.0 / (1 << value);
+
 	return ret;
 }
 

@@ -117,3 +117,5 @@ static inline double ema_update(double prv_value, double value, double alpha)
 }
 
 #define EMA_UPDATE(ema, value, alpha) ema = ema_update(ema, value, alpha)
+
+extern double energy_unit;

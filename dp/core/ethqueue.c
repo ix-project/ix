@@ -197,7 +197,7 @@ int eth_process_recv(void)
 			energy_diff = energy - power_acc.prv_energy;
 			if (energy_diff < 0)
 				energy_diff += 1 << 31;
-			cp_shmem->pkg_power = (double) energy_diff / (timestamp - power_acc.prv_timestamp) * cycles_per_us * 1000000;
+			cp_shmem->pkg_power = (double) energy_diff * energy_unit / (timestamp - power_acc.prv_timestamp) * cycles_per_us * 1000000;
 		} else {
 			cp_shmem->pkg_power = 0;
 		}
