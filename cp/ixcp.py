@@ -327,8 +327,11 @@ def set_step(shmem, fg_per_cpu, step, dir, args):
   if dir == STEP_UP:
     control_background_job(args, len([1 for cpu in step['cpus'] if cpu < 8]))
 
-  for filename in glob.glob('/sys/devices/system/cpu/cpu*/cpufreq/scaling_setspeed'):
-    f = open(filename, 'w')
+  for directory in glob.glob('/sys/devices/system/cpu/cpu*/cpufreq/'):
+    f = open('%s/scaling_governor' % directory, 'w')
+    f.write('userspace\n')
+    f.close()
+    f = open('%s/scaling_setspeed' % directory, 'w')
     f.write('%s\n' % step['frequency'])
     f.close()
   set_cpus(shmem, fg_per_cpu, step['cpus'])
