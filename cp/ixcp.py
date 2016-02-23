@@ -41,10 +41,6 @@ NETHDEV = 16
 ETH_MAX_TOTAL_FG = ETH_MAX_NUM_FG * NETHDEV
 IDLE_FIFO_SIZE = 256
 
-MSR_RAPL_POWER_UNIT = 1542
-ENERGY_UNIT_MASK = 0x1F00
-ENERGY_UNIT_OFFSET = 0x08
-
 class CpuMetrics(ctypes.Structure):
   _fields_ = [
     ('queuing_delay', ctypes.c_double),
@@ -350,18 +346,6 @@ def get_all_metrics(shmem, attr):
 def avg(list):
   return sum(list) / len(list)
 
-def rdmsr(cpu, address):
-  try:
-    f = open('/dev/cpu/%d/msr' % cpu, 'rb')
-    f.seek(address)
-    data = f.read(8)
-    value = struct.unpack('Q', data)[0]
-    f.close()
-    return value
-  except IOError, e:
-    print >>sys.stderr, 'Warning: %s' % e
-    return 0
-
 def main():
   global set_step_done
   global migration_times
@@ -504,14 +488,7 @@ def main():
         print '# %f control_action %s step=%d x=x freq=%d cpus=%r x=x' % (now, step,curr_step_idx,steps[curr_step_idx]['frequency'],steps[curr_step_idx]['cpus'])
       time.sleep(.1)
   elif args.print_power:
-    val = rdmsr(1, MSR_RAPL_POWER_UNIT)
-    energy_unit = 1.0 / (1 << ((val & ENERGY_UNIT_MASK) >> ENERGY_UNIT_OFFSET))
-
-    while True:
-      line = sys.stdin.readline()
-      if len(line) == 0:
-        break
-      print '%s %f' % (line[:-1], shmem.pkg_power * energy_unit)
+    print shmem.pkg_power
 
 if __name__ == '__main__':
   main()
