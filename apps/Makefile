@@ -22,7 +22,7 @@
 CC      = gcc
 CFLAGS  = -Wall -g -MD -O3 -I../libix -I../inc -pthread
 
-APPS = echoserver
+APPS = echoserver echoclient
 
 all: $(APPS)
 
