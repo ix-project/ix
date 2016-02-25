@@ -27,8 +27,9 @@
           <li><a href="https://github.com/ix-project/ix">View On <strong>GitHub</strong></a></li>
         </ul>
       </header>
-      <section>
-        <h3>
+      <section>        
+          
+<h3>
 <a id="about" class="anchor" href="#about" aria-hidden="true"><span class="octicon octicon-link"></span></a>About</h3>
 
 <p>Commodity operating systems fail in maintaining the high throughput and low (tail) latency when applications require millions of operations per second and just hundreds of microseconds for slowest requests. However, these requirements are not rare in today's datacenters (e.g. for key-value stores) where every individual slack off in latency effects multiple requests due to distributed fan-out computational model. Overprovisioning of resources is often the big hammer of taming the latency curve which leads to low utilization of datacenters.</p>
@@ -38,9 +39,16 @@
 <p>The network processing is optimized for both throughput and latency of event-driven latency critical applications by processing to completion bounded batches of packets, and by minimizing coherence traffic and multi-core synchronization. The control plane dynamically manages the resources (cores and frequency) driven by different policies (e.g. energy proportionality).</p>
 
 <h3>
+<a id="publications" class="anchor" href="#publications" aria-hidden="true"><span class="octicon octicon-link"></span></a>Publications</h3>
+
+<p>G. Prekas, M. Primorac, A. Belay, C. Kozyrakis and E. Bugnion. Energy Proportionality and Workload Consolidation for Latency-Critical Applications. 2015 ACM Symposium on Cloud Computing, Kohala Coast, HI, USA, 2015. <a href="http://infoscience.epfl.ch/record/210138/files/ix-energy-socc15.pdf?version=1">Publication</a></p>
+
+<p>A. Belay, G. Prekas, A. Klimovic, S. Grossman and C. Kozyrakis et al. IX: A Protected Dataplane Operating System for High Throughput and Low Latency. 11th Symposium on Operating System Design and Implementation (OSDI), Broomfield, CO, USA, 2014. <a href="http://infoscience.epfl.ch/record/201671/files/osdi14-ix.pdf?version=1">Publication</a></p>
+
+<h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
 
-<p>At EPFL <a href="http://dcsl.epfl.ch/dcsl">DCSL</a>: Edouard Bugnion (<a href="https://github.com/edbugnion" class="user-mention">@edbugnion</a>), George Prekas (<a href="https://github.com/prekageo" class="user-mention">@prekageo</a>), Mia Primorac (<a href="https://github.com/MihaelaMia" class="user-mention">@MihaelaMia</a>) and Bernard Gutermann (<a href="https://github.com/bernardgut" class="user-mention">@bernardgut</a>). At Stanford: Adam Beley (<a href="https://github.com/abelay" class="user-mention">@abelay</a>).</p>
+<p>Adam Beley (<a href="https://github.com/abelay" class="user-mention">@abelay</a>), E. Bugnion (<a href="https://github.com/edbugnion" class="user-mention">@edbugnion</a>), S. Grossman, B. Gutermann (<a href="https://github.com/bernardgut" class="user-mention">@bernardgut</a>), A. Klimovic (<a href="https://github.com/anakli" class="user-mention">@anakli</a>),  C. Kozyrakis (<a href="https://github.com/kozyraki" class="user-mention">@kozyraki</a>), G. Prekas (<a href="https://github.com/prekageo" class="user-mention">@prekageo</a>), M. Primorac (<a href="https://github.com/MihaelaMia" class="user-mention">@MihaelaMia</a>),  .</p>
 
 <h3>
 <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
