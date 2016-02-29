@@ -50,14 +50,17 @@ enum {
 int dpdk_init(void)
 {
 	int ret;
-	char *argv[] = { "./ix", NULL };
+	/* -m stands for memory in MBs that DPDK will allocate. Must be enough
+	 * to accommodate the pool_size defined below. */
+	char *argv[] = { "./ix", "-m", "146" };
 	const int pool_buffer_size = 0;
 	const int pool_cache_size = 0;
-	const int pool_size = 8192;
+	/* pool_size sets an implicit limit on cores * NICs that DPDK allows */
+	const int pool_size = 32768;
 
 	optind = 0;
 	internal_config.no_hugetlbfs = 1;
-	ret = rte_eal_init(1, argv);
+	ret = rte_eal_init(sizeof(argv) / sizeof(argv[0]), argv);
 	if (ret < 0)
 		return ret;
 
