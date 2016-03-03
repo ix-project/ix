@@ -354,6 +354,32 @@ def get_all_metrics(shmem, attr):
 def avg(list):
   return sum(list) / len(list)
 
+class CpuLists:
+  pass
+
+cpu_lists = CpuLists()
+
+def compute_cpu_lists(shmem):
+  reverse_map = {}
+  for i in xrange(shmem.nr_cpus):
+    reverse_map[shmem.cpu[i]] = i
+
+  cpu_lists.ht_at_the_end = []
+  later = []
+
+  for i in xrange(shmem.nr_cpus):
+    if i in later:
+      continue
+    cpu_lists.ht_at_the_end.append(i)
+    f = open('/sys/devices/system/cpu/cpu%d/topology/thread_siblings_list' % shmem.cpu[i], 'r')
+    hyperthreads = map(int, f.read().split(','))
+    f.close()
+    for cpu in hyperthreads:
+      if cpu not in reverse_map or reverse_map[cpu] == i:
+        continue
+      later.append(reverse_map[cpu])
+  cpu_lists.ht_at_the_end.extend(later)
+
 def main():
   global set_step_done
   global migration_times
@@ -399,6 +425,8 @@ def main():
 
   if args.background_cpus is not None:
     args.background_cpus = map(int, args.background_cpus.split(','))
+
+  compute_cpu_lists(shmem)
 
   if args.single_cpu:
     target_cpu = 0
