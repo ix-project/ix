@@ -367,12 +367,14 @@ def compute_cpu_lists(shmem):
   for i in xrange(shmem.nr_cpus):
     reverse_map[shmem.cpu[i]] = i
 
+  cpu_lists.ht_interleaved = []
   cpu_lists.ht_at_the_end = []
   later = []
 
   for i in xrange(shmem.nr_cpus):
     if i in later:
       continue
+    cpu_lists.ht_interleaved.append(i)
     cpu_lists.ht_at_the_end.append(i)
     f = open('/sys/devices/system/cpu/cpu%d/topology/thread_siblings_list' % shmem.cpu[i], 'r')
     hyperthreads = map(int, f.read().split(','))
@@ -380,6 +382,7 @@ def compute_cpu_lists(shmem):
     for cpu in hyperthreads:
       if cpu not in reverse_map or reverse_map[cpu] == i:
         continue
+      cpu_lists.ht_interleaved.append(reverse_map[cpu])
       later.append(reverse_map[cpu])
   cpu_lists.ht_at_the_end.extend(later)
 
