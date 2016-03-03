@@ -180,8 +180,9 @@ def wake_up(shmem, cpu):
   while cmd.cpu_state != Command.CP_CPU_STATE_RUNNING:
     pass
 
-def set_nr_cpus(shmem, fg_per_cpu, cpus, verbose = False):
-  return set_cpus(shmem, fg_per_cpu, range(cpus), verbose)
+def set_nr_cpus(shmem, fg_per_cpu, cpu_count, verbose = False):
+  cpus = cpu_lists.ht_at_the_end[:cpu_count]
+  return set_cpus(shmem, fg_per_cpu, cpus, verbose)
 
 def list_runs_to_str(inp):
   if len(inp) == 0:
@@ -269,19 +270,21 @@ def get_steps(mode):
   frequencies = sorted(map(int, f.readline().split()))
   f.close()
 
+  cpu_list = cpu_lists.ht_at_the_end
+
   steps = []
   if mode == STEPS_MODE_ENERGY_EFFICIENCY:
     for cpus in xrange(1, core_count + 1):
-      steps.append({'cpus': range(cpus), 'frequency': frequencies[0]})
+      steps.append({'cpus': cpu_list[:cpus], 'frequency': frequencies[0]})
     for freq in frequencies:
-      steps.append({'cpus': range(core_count * 2), 'frequency': freq})
+      steps.append({'cpus': cpu_list[:core_count * 2], 'frequency': freq})
   elif mode == STEPS_MODE_BACKGROUND_TASK:
     for cpus in xrange(1, core_count + 1):
-      steps.append({'cpus': range(cpus) + range(core_count, core_count + cpus), 'frequency': frequencies[-2]})
-    steps.append({'cpus': range(core_count * 2), 'frequency': frequencies[-1]})
+      steps.append({'cpus': cpu_list[:cpus] + cpu_list[core_count:core_count + cpus], 'frequency': frequencies[-2]})
+    steps.append({'cpus': cpu_list[:core_count * 2], 'frequency': frequencies[-1]})
   elif mode == STEPS_MODE_MINMAX:
     steps.append({'cpus': [0], 'frequency': frequencies[0]})
-    steps.append({'cpus': range(core_count * 2), 'frequency': frequencies[-1]})
+    steps.append({'cpus': cpu_list[:core_count * 2], 'frequency': frequencies[-1]})
 
   return steps
 
