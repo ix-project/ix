@@ -480,12 +480,16 @@ static int init_firstcpu(void)
 	int ret;
 	unsigned long msr_val;
 	unsigned int value;
+	int i;
 
 	cpus_active = CFG.num_cpus;
 	cp_shmem->nr_cpus = CFG.num_cpus;
 	if (CFG.num_cpus > 1) {
 		pthread_barrier_init(&start_barrier, NULL, CFG.num_cpus);
 	}
+
+	for (i = 0; i < CFG.num_cpus; i++)
+		cp_shmem->cpu[i] = CFG.cpu[i];
 
 	ret = cpu_init_one(CFG.cpu[0]);
 	if (ret) {

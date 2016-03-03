@@ -118,6 +118,7 @@ class ShMem(ctypes.Structure):
     ('nr_flow_groups', ctypes.c_uint),
     ('nr_cpus', ctypes.c_uint),
     ('pkg_power', ctypes.c_float),
+    ('cpu', ctypes.c_int * NCPU),
     ('padding', ctypes.c_byte * 52),
     ('cpu_metrics', CpuMetrics * NCPU),
     ('flow_group', FlowGroupMetrics * ETH_MAX_TOTAL_FG),

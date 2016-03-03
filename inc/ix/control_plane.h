@@ -78,6 +78,7 @@ extern volatile struct cp_shmem {
 	uint32_t nr_flow_groups;
 	uint32_t nr_cpus;
 	float pkg_power;
+	int cpu[NCPU];
 	struct cpu_metrics cpu_metrics[NCPU];
 	struct flow_group_metrics flow_group[ETH_MAX_TOTAL_FG];
 	struct command_struct command[NCPU];
