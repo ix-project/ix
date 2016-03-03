@@ -181,7 +181,7 @@ def wake_up(shmem, cpu):
     pass
 
 def set_nr_cpus(shmem, fg_per_cpu, cpu_count, verbose = False):
-  cpus = cpu_lists.ht_at_the_end[:cpu_count]
+  cpus = cpu_lists.ht_interleaved[:cpu_count]
   return set_cpus(shmem, fg_per_cpu, cpus, verbose)
 
 def list_runs_to_str(inp):
