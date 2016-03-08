@@ -33,6 +33,9 @@
 #include <ix/pci.h>
 #include <ix/log.h>
 #include <ix/errno.h>
+#include <ix/lock.h>
+
+#include <pcidma.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -42,11 +45,15 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <linux/pci.h>
+#include <sys/ioctl.h>
 
 #include <dune.h>
 
 #define PCI_SYSFS_PATH "/sys/bus/pci/devices"
-#define PCI_PROCFS_PATH "/proc/bus/pci"
+
+static int pcidma_fd;
+
+static DEFINE_SPINLOCK(pcidma_open_lock);
 
 static int sysfs_parse_val(const char *path, uint64_t *val)
 {
@@ -391,32 +398,20 @@ int pci_enable_device(struct pci_dev *dev)
 
 int pci_set_master(struct pci_dev *dev)
 {
-	int fd;
-	int ret;
-	uint16_t cmd;
-	char path[PATH_MAX];
-	struct pci_addr *addr;
+	struct args_enable args;
 
-	addr = &dev->addr;
+	spin_lock(&pcidma_open_lock);
+	if (!pcidma_fd)
+		pcidma_fd = open("/dev/pcidma", O_RDONLY);
+	spin_unlock(&pcidma_open_lock);
 
-	if (addr->domain)
-		snprintf(path, PATH_MAX, "%s/%04x:%02x/%02x.%d", PCI_PROCFS_PATH, addr->domain, addr->bus, addr->slot, addr->func);
-	else
-		snprintf(path, PATH_MAX, "%s/%02x/%02x.%d", PCI_PROCFS_PATH, addr->bus, addr->slot, addr->func);
+	if (pcidma_fd == -1)
+		return -EIO;
 
-	fd = open(path, O_RDWR);
-	if (fd == -1)
-		return -1;
+	args.pci_loc.domain = dev->addr.domain;
+	args.pci_loc.bus = dev->addr.bus;
+	args.pci_loc.slot = dev->addr.slot;
+	args.pci_loc.func = dev->addr.func;
 
-	ret = pread(fd, &cmd, sizeof(cmd), PCI_COMMAND);
-	if (ret != sizeof(cmd))
-		return -1;
-
-	cmd = cmd | PCI_COMMAND_MASTER;
-
-	ret = pwrite(fd, &cmd, sizeof(cmd), PCI_COMMAND);
-	if (ret != sizeof(cmd))
-		return -1;
-
-	return 0;
+	return ioctl(pcidma_fd, PCIDMA_ENABLE, &args);
 }

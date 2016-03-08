@@ -6,6 +6,7 @@
 
 /deps/dpdk
 /deps/dune
+/deps/pcidma
 /ix.conf
 /dp/ix
 /apps/echoserver

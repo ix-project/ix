@@ -22,6 +22,7 @@ To fetch the dependencies:
 To build the dependecies:
 
     make -sj64 -C deps/dune kern libdune
+    make -sj64 -C deps/pcidma
     make -sj64 -C deps/dpdk config T=x86_64-native-linuxapp-gcc
     make -sj64 -C deps/dpdk
 
@@ -37,6 +38,7 @@ To run the IX TCP echo server:
     sudo sh -c 'for i in /sys/devices/system/node/node*/hugepages/hugepages-2048kB/nr_hugepages; do echo 4096 > $i; done'
     sudo modprobe -r ixgbe
     sudo insmod deps/dune/kern/dune.ko
+    sudo insmod deps/pcidma/pcidma.ko
     sudo ./dp/ix -- ./apps/echoserver 4
 
 Then, try from another computer:
