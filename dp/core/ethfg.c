@@ -222,6 +222,7 @@ void eth_fg_assign_to_cpu(bitmap_ptr fg_bitmap, int cpu)
 	int ret;
 	int real = 0;
 	int count;
+	int migrate;
 
 	count = 0;
 	for (i = 0; i < percpu_get(eth_num_queues); i++)
@@ -285,16 +286,32 @@ void eth_fg_assign_to_cpu(bitmap_ptr fg_bitmap, int cpu)
 		if (fgs[i] && fgs[i]->cur_cpu == percpu_get(cpu_id))
 			break;
 
-	/* If the current core has no FG assigned, then migrate the flow
-	 * director to the destination core. */
-	if (i == ETH_MAX_TOTAL_FG)
-		migrate_fdir(eth[0], outbound_fg(), cpu);
+	/* If the current core has no FG assigned, then migrate flow director
+	 * FGs to the destination core. */
+	if (i == ETH_MAX_TOTAL_FG) {
+		for (i = 0; i < NCPU; i++) {
+			if (!outbound_fg_remote(i))
+				continue;
+			if (outbound_fg_remote(i)->cur_cpu !=
+			    percpu_get(cpu_id))
+				continue;
+			migrate_fdir(eth[0], outbound_fg_remote(i), cpu);
+		}
+	}
 
-	/* Try to migrate the flow director to the destination core, if it has
-	 * been migrated to the current core at a prior stage. */
-	if (outbound_fg_remote(CFG.cpu[cpu]) &&
-	    outbound_fg_remote(CFG.cpu[cpu])->cur_cpu == percpu_get(cpu_id))
-		migrate_fdir(eth[0], outbound_fg_remote(CFG.cpu[cpu]), cpu);
+	/* Try to migrate flow director FGs to the destination core. */
+	migrate = 0;
+	for (i = 0; i < NCPU; i++) {
+		if (i == percpu_get(cpu_id) || !outbound_fg_remote(i))
+			continue;
+		if (outbound_fg_remote(i)->cur_cpu != percpu_get(cpu_id))
+			continue;
+		if (!migrate)
+			continue;
+		migrate_fdir(eth[0], outbound_fg_remote(i), cpu);
+		migrate = !migrate;
+	}
+
 }
 
 static void transition_handler_prev(struct timer *t, struct eth_fg *cur_fg)
