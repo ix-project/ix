@@ -333,6 +333,11 @@ static void early_transition_handler_prev(void *unused)
 
 	timer_del(&info->transition_timeout);
 
+	/* A packet of a migrated flow group has arrived to the target cpu. This
+	 * means that the migration has been completed in hardware. Read all the
+	 * remaining packets from the previous cpu queue. */
+	eth_process_poll();
+
 	cpu_run_on_one(transition_handler_target, info, info->target_cpu);
 }
 
