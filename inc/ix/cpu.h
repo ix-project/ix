@@ -65,13 +65,22 @@ static inline void *__percpu_get(void *key)
 }
 
 /**
+ * percpu_get_addr - get the local percpu variable's address
+ * @var: the percpu variable
+ *
+ * Returns a percpu variable address.
+ */
+#define percpu_get_addr(var)						\
+	((typeof(var) *) (__percpu_get(&var)))
+
+/**
  * percpu_get - get the local percpu variable
  * @var: the percpu variable
  *
  * Returns a percpu variable.
  */
 #define percpu_get(var)						\
-	(*((typeof(var) *) (__percpu_get(&var))))
+	(*percpu_get_addr(var))
 
 /**
  * cpu_is_active - is the CPU being used?
