@@ -40,7 +40,7 @@ depend: .depend
 -include .depend
 
 libix.a: $(OBJS)
-	$(AR) cru $(@) $(OBJS)
+	$(AR) crD $(@) $(OBJS)
 
 clean:
 	rm -f $(OBJS) libix.a .depend
