@@ -184,6 +184,20 @@ def set_nr_cpus(shmem, fg_per_cpu, cpu_count, verbose = False):
   cpus = cpu_lists.ht_interleaved[:cpu_count]
   return set_cpus(shmem, fg_per_cpu, cpus, verbose)
 
+def set_cpulist(shmem, fg_per_cpu, cpulist, verbose = False):
+  reverse_map = {}
+  for i in xrange(shmem.nr_cpus):
+    reverse_map[shmem.cpu[i]] = i
+
+  cpus = []
+  for cpu in cpulist:
+    if cpu in reverse_map:
+      cpus.append(reverse_map[cpu])
+    else:
+      print >>sys.stderr, 'Invalid cpulist'
+      return
+  return set_cpus(shmem, fg_per_cpu, cpus, verbose)
+
 def list_runs_to_str(inp):
   if len(inp) == 0:
     return '0:[]'
@@ -419,6 +433,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('--single-cpu', action='store_true')
   parser.add_argument('--cpus', type=int)
+  parser.add_argument('--cpulist', type=str)
   parser.add_argument('--idle', type=int)
   parser.add_argument('--wake-up', type=int)
   parser.add_argument('--show-metrics', action='store_true')
@@ -445,6 +460,9 @@ def main():
     print
   elif args.cpus is not None:
     set_nr_cpus(shmem, fg_per_cpu, args.cpus, verbose = True)
+  elif args.cpulist is not None:
+    cpulist = map(int, args.cpulist.split(','))
+    set_cpulist(shmem, fg_per_cpu, cpulist)
   elif args.idle is not None:
     idle(shmem, args.idle)
   elif args.wake_up is not None:
