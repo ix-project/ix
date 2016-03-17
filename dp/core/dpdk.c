@@ -30,10 +30,6 @@
 /* For struct sockaddr */
 #include <sys/socket.h>
 
-/* Prevent inclusion of rte_memcpy.h */
-#define _RTE_MEMCPY_X86_64_H_
-inline void *rte_memcpy(void *dst, const void *src, size_t n);
-
 /* General DPDK includes */
 #include <rte_config.h>
 #include <eal_internal_cfg.h>
