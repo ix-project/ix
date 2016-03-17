@@ -67,3 +67,12 @@ static inline int sys_nrcpus(void)
 	return (int) SYSCALL(SYS_NRCPUS);
 }
 
+static inline int sys_timer_init(void * addr)
+{
+	return (int) SYSCALL(SYS_TIMER_INIT, addr);
+}
+
+static inline int sys_timer_ctl(int timer_id, uint64_t delay)
+{
+	return (int) SYSCALL(SYS_TIMER_CTL, timer_id, delay);
+}

@@ -80,6 +80,8 @@ enum {
 	SYS_MUNMAP,
 	SYS_SPAWNMODE,
 	SYS_NRCPUS,
+	SYS_TIMER_INIT,
+	SYS_TIMER_CTL,
 	SYS_NR,
 };
 
@@ -321,6 +323,7 @@ enum {
 	USYS_TCP_RECV,
 	USYS_TCP_SENT,
 	USYS_TCP_DEAD,
+	USYS_TIMER,
 	USYS_NR,
 };
 
@@ -447,6 +450,15 @@ usys_tcp_dead(hid_t handle, unsigned long cookie)
 	BSYS_DESC_2ARG(d, USYS_TCP_DEAD, handle, cookie);
 }
 
+/**
+ * usys_timer - indicates that there is a timer event
+ */
+static inline void
+usys_timer(unsigned long cookie)
+{
+	struct bsys_desc *d = usys_next();
+	BSYS_DESC_1ARG(d, USYS_TIMER, cookie);
+}
 
 /*
  * Kernel system call definitions

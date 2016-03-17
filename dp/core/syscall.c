@@ -42,6 +42,7 @@
 #include <ix/log.h>
 #include <ix/control_plane.h>
 #include <ix/ethfg.h>
+#include <ix/utimer.h>
 
 #include <dune.h>
 
@@ -346,6 +347,26 @@ static int sys_nrcpus(void)
 	return cpus_active;
 }
 
+/**
+ * sys_timer_init - initializes a timer
+ *
+ * Returns the timer id
+ */
+static int sys_timer_init(void *addr)
+{
+	return utimer_init(percpu_get_addr(utimers), addr);
+}
+
+/**
+ * sys_timer_ctl - arm the timer
+ *
+ * Returns 0 or failure
+ */
+static int sys_timer_ctl(int timer_id, uint64_t delay)
+{
+	return utimer_arm(percpu_get_addr(utimers), timer_id, delay);
+}
+
 typedef uint64_t (*sysfn_t)(uint64_t, uint64_t, uint64_t,
 			    uint64_t, uint64_t, uint64_t);
 
@@ -357,6 +378,8 @@ static sysfn_t sys_tbl[] = {
 	(sysfn_t) sys_unmap,
 	(sysfn_t) sys_spawnmode,
 	(sysfn_t) sys_nrcpus,
+	(sysfn_t) sys_timer_init,
+	(sysfn_t) sys_timer_ctl,
 };
 
 /**

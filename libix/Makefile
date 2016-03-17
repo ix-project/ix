@@ -26,7 +26,7 @@ CC 	= gcc
 CFLAGS	= -g -Wall -O3 $(INC)
 AR	= ar
 
-SRCS	= main.c mem.c mempool.c ixev.c
+SRCS	= main.c mem.c mempool.c ixev.c ixev_timer.c
 OBJS	= $(subst .c,.o,$(SRCS))
 
 all: libix.a

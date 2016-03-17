@@ -32,6 +32,7 @@
 
 #include "ixev.h"
 #include "buf.h"
+#include "ixev_timer.h"
 
 #define CMD_BATCH_SIZE	4096
 
@@ -190,12 +191,20 @@ static void ixev_tcp_sent(hid_t handle, unsigned long cookie, size_t len)
 		ctx->trig_mask |= IXEVOUT;
 }
 
+static void ixev_timer_event(unsigned long cookie)
+{
+	struct ixev_timer *t = (struct ixev_timer *) cookie;
+
+	t->handler(t->arg);
+}
+
 static struct ix_ops ixev_ops = {
 	.tcp_connected	= ixev_tcp_connected,
 	.tcp_knock	= ixev_tcp_knock,
 	.tcp_dead	= ixev_tcp_dead,
 	.tcp_recv	= ixev_tcp_recv,
 	.tcp_sent	= ixev_tcp_sent,
+	.timer_event	= ixev_timer_event,
 };
 
 /**

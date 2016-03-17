@@ -40,6 +40,7 @@ struct ix_ops {
 	void (*tcp_sent)(hid_t handle, unsigned long cookie,
 			 size_t win_size);
 	void (*tcp_dead)(hid_t handle, unsigned long cookie);
+	void (*timer_event)(unsigned long cookie);
 };
 
 extern void ix_flush(void);
