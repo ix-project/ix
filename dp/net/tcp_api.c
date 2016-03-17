@@ -514,7 +514,7 @@ lwip_tcp_event(struct eth_fg *cur_fg, void *arg, struct tcp_pcb *pcb,
 {
 	switch (event) {
 	case LWIP_EVENT_ACCEPT:
-			return on_accept(cur_fg, arg, pcb, err);
+		return on_accept(cur_fg, arg, pcb, err);
 		break;
 	case LWIP_EVENT_SENT:
 		return on_sent(arg, pcb, size);

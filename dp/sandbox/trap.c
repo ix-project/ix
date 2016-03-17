@@ -433,7 +433,7 @@ static int syscall_check_params(struct dune_tf *tf)
 		}
 		break;
 
-		/* umm_ checks for correctness */
+	/* umm_ checks for correctness */
 	case SYS_brk:
 		break;
 
@@ -472,7 +472,7 @@ static int syscall_check_params(struct dune_tf *tf)
 	case SYS_lseek:
 		break;
 
-		/* XXX - doesn't belong here */
+	/* XXX - doesn't belong here */
 	case SYS_close:
 		if (ARG0(tf) < 3) {
 			tf->rax = 0;
@@ -585,7 +585,7 @@ static void syscall_do_foreal(struct dune_tf *tf)
 		break;
 
 
-		/* ignore signals for now */
+	/* ignore signals for now */
 	case SYS_rt_sigaction:
 	case SYS_rt_sigprocmask:
 		tf->rax = 0;
