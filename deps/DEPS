@@ -1,4 +1,4 @@
 # dpendencies tracker for IX
 git://dpdk.org/dpdk                     dpdk    5ce3ace1de458e2ded1b408acfe59c15cf9863f1
 https://github.com/ix-project/dune.git   dune   0a3fb024477a1ed4532276090e0544754752efc4
-https://github.com/ix-project/pcidma.git pcidma 6b2b394c6d7d46b83a20b3af97632f57bcb4446b
+https://github.com/ix-project/pcidma.git pcidma 3a411ad4810a1c8ee7954ad35229dfa9e7f270a1
