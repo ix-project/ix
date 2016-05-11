@@ -1,4 +1,16 @@
-# dependencies tracker for IX
-git://dpdk.org/dpdk                     dpdk    v16.04
-https://github.com/ix-project/dune.git   dune   0a3fb024477a1ed4532276090e0544754752efc4
+# This file is used to manage the dependencies of IX.
+
+# Three lines of non-changing
+# comments so that git can
+# automatically merge this file.
+git://dpdk.org/dpdk dpdk v16.04
+
+# Three lines of non-changing
+# comments so that git can
+# automatically merge this file.
+https://github.com/ix-project/dune.git dune 0a3fb024477a1ed4532276090e0544754752efc4
+
+# Three lines of non-changing
+# comments so that git can
+# automatically merge this file.
 https://github.com/ix-project/pcidma.git pcidma 3a411ad4810a1c8ee7954ad35229dfa9e7f270a1
