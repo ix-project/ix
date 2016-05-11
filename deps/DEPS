@@ -8,7 +8,7 @@ git://dpdk.org/dpdk dpdk v16.04
 # Three lines of non-changing
 # comments so that git can
 # automatically merge this file.
-https://github.com/ix-project/dune.git dune 0a3fb024477a1ed4532276090e0544754752efc4
+https://github.com/ix-project/dune.git dune 978132b8ab4b51dca12d3e618ccc2fe804345674
 
 # Three lines of non-changing
 # comments so that git can
