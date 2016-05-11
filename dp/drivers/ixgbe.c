@@ -53,6 +53,9 @@
 #undef ETH_DCB_NONE
 #undef ETH_DCB_RX
 #undef ETH_DCB_TX
+#undef ETH_LINK_FULL_DUPLEX
+#undef ETH_LINK_HALF_DUPLEX
+#undef ETH_LINK_SPEED_AUTONEG
 #undef ETH_RSS
 #undef ETH_RSS_IPV4
 #undef ETH_RSS_IPV6
