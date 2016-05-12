@@ -128,7 +128,7 @@ static int parse_arp(void)
 
 	arp = config_lookup(&cfg, "arp");
 	if (!arp) {
-		log_info("no static arp entries defined in config");
+		log_info("no static arp entries defined in config\n");
 		return 0;
 	}
 	for (i = 0; i < config_setting_length(arp); ++i) {
