@@ -52,7 +52,7 @@ int dpdk_init(void)
 	int ret;
 	/* -m stands for memory in MBs that DPDK will allocate. Must be enough
 	 * to accommodate the pool_size defined below. */
-	char *argv[] = { "./ix", "-m", "146" };
+	char *argv[] = { "./ix", "-m", "148" };
 	const int pool_buffer_size = 0;
 	const int pool_cache_size = 0;
 	/* pool_size sets an implicit limit on cores * NICs that DPDK allows */

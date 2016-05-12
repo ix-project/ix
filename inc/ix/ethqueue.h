@@ -34,7 +34,7 @@
 #include <ix/ethfg.h>
 
 #define ETH_DEV_RX_QUEUE_SZ     512
-#define ETH_DEV_TX_QUEUE_SZ     2048
+#define ETH_DEV_TX_QUEUE_SZ     4096
 #define ETH_RX_MAX_DEPTH	32768
 
 extern unsigned int eth_rx_max_batch;
