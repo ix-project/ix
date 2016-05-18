@@ -171,7 +171,7 @@ static void kstats_print(struct timer *t, struct eth_fg *none)
 		 ks->idle.tot_lat * 100 / total_cycles,
 		 ks->user.tot_lat * 100 / total_cycles,
 		 max(0, (int64_t)(total_cycles - ks->idle.tot_lat - ks->user.tot_lat)) * 100 / total_cycles,
-		 total_cycles - ks->idle.tot_lat,
+		 max(0, (int64_t)(total_cycles - ks->idle.tot_lat)),
 		 read_perf_event(percpu_get(hw_instructions_fd)),
 		 read_perf_event(percpu_get(llc_load_misses_fd)),
 		 percpu_get(_kstats_packets),
