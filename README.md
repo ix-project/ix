@@ -58,9 +58,14 @@ The resulting executable files are `cp/ixcp.py` for the IX control plane and `dp
    sudo ./dp/ix -- ./apps/echoserver 4
    ```
 
-   Then, try from another host:
+   Then, try from another Linux host:
    ```
    echo 123 | nc -vv <IP> <PORT>
+   ```
+   You should see the following output: 
+   ```
+   Connection to <IP> <PORT> port [tcp/*] succeeded!
+   123
    ```
 
 ## Setup Instuctions on VFs
