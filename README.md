@@ -40,6 +40,7 @@ There is currently no binary distribution of IX. You will therefore have to comp
    sudo apt-get install libconfig-dev libnuma-dev
    make -sj64
    ```
+The resulting executable files are `cp/ixcp.py` for the IX control plane and `dp/ix` for the IX dataplane kernel. 
 
 4. Set up the environment:
    ```
