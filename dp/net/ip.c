@@ -103,6 +103,8 @@ static void ip_input(struct eth_fg *cur_fg, struct mbuf *pkt, struct ip_hdr *hdr
 			   mbuf_nextd_off(hdr, struct icmp_hdr *, hdrlen),
 			   pktlen);
 		break;
+	default:
+		goto out;
 	}
 
 	return;
