@@ -32,10 +32,10 @@ $(SUBDIRS):
 clean: $(CLEANDIRS)
 
 style:
-	astyle -A8 -T8 -p -U -H --suffix=~ -r -Q --exclude=deps --exclude=inc/lwip --exclude=dp/lwip --exclude=dp/net/tcp.c --exclude=dp/net/tcp_in.c --exclude=dp/net/tcp_out.c '*.c' '*.h'
+	astyle -A8 -T8 -p -U -H --suffix=~ -r -Q --exclude=deps --exclude=inc/lwip --exclude=dp/lwip --exclude=dp/net/tcp.c --exclude=dp/net/tcp_in.c --exclude=dp/net/tcp_out.c --exclude=dp/drivers/ixgbe.c '*.c' '*.h'
 
 style-check:
-	$(eval TEST=$(shell astyle --dry-run --formatted -A8 -T8 -p -U -H --suffix=~ -r -Q --exclude=deps --exclude=inc/lwip --exclude=dp/lwip --exclude=dp/net/tcp.c --exclude=dp/net/tcp_in.c --exclude=dp/net/tcp_out.c '*.c' '*.h' | grep Formatted))
+	$(eval TEST=$(shell astyle --dry-run --formatted -A8 -T8 -p -U -H --suffix=~ -r -Q --exclude=deps --exclude=inc/lwip --exclude=dp/lwip --exclude=dp/net/tcp.c --exclude=dp/net/tcp_in.c --exclude=dp/net/tcp_out.c --exclude=dp/drivers/ixgbe.c '*.c' '*.h' | grep Formatted))
 	@if [ -z "$(TEST)" ] ; then\
 	    echo "success";\
 	    exit 0;\

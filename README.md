@@ -95,3 +95,5 @@ IX is compatible with Virtual Functions on SR-IOV capable multiport network card
    ```
    echo 123 | nc -vv <IP> <PORT>
    ```
+   
+   NOTE : be aware that IX currently does not support running on more than 1 core when running on a Virtual Function.

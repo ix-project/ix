@@ -80,6 +80,7 @@
 #include <ix/byteorder.h>
 #include <ix/ethdev.h>
 #include <ix/dpdk.h>
+#include <ix/cfg.h>
 
 #define IXGBE_ALIGN		128
 #define IXGBE_MIN_RING_DESC	64
@@ -993,7 +994,7 @@ enum rte_eth_rx_mq_mode translate_conf_rxmode_mq_mode(enum ix_rte_eth_rx_mq_mode
 {
 	switch (in) {
 	case IX_ETH_MQ_RX_RSS:
-			return ETH_MQ_RX_RSS;
+		return ETH_MQ_RX_RSS;
 	default:
 		assert(false);
 	}
@@ -1003,7 +1004,7 @@ enum rte_eth_tx_mq_mode translate_conf_txmode_mq_mode(enum ix_rte_eth_tx_mq_mode
 {
 	switch (in) {
 	case IX_ETH_MQ_TX_NONE:
-			return ETH_MQ_TX_NONE;
+		return ETH_MQ_TX_NONE;
 	default:
 		assert(false);
 	}
@@ -1111,12 +1112,19 @@ int ixgbe_init(struct pci_dev *pci_dev, struct ix_rte_eth_dev **ethp)
 	if (ret < 0)
 		return ret;
 
-	if (!strcmp(driver->name, "rte_ixgbe_pmd"))
+	if (!strcmp(driver->name, "rte_ixgbe_pmd")) {
 		dev->dev_ops = &eth_dev_ops;
-	else if (!strcmp(driver->name, "rte_ixgbevf_pmd"))
+	} else if (!strcmp(driver->name, "rte_ixgbevf_pmd")) {
 		dev->dev_ops = &vf_eth_dev_ops;
-	else
+		/* check that the config is right */
+		if (CFG.num_cpus > 1) {
+			log_err("using more than 1 core on a VF is currently \
+					not supported.\n");
+			return -1;
+		}
+	} else {
 		assert(0);
+	}
 
 	dev->data->mac_addrs = calloc(1, ETH_ADDR_LEN);
 	for (i = 0; i < ETHER_ADDR_LEN; i++)
