@@ -19,6 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-SRC = ixgbe.c
+SRC = ixgbe.c common.c
 $(eval $(call register_dir, drivers, $(SRC)))
 

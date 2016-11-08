@@ -80,6 +80,7 @@
 #include <ix/byteorder.h>
 #include <ix/ethdev.h>
 #include <ix/dpdk.h>
+#include <ix/drivers.h>
 #include <ix/cfg.h>
 
 #define IXGBE_ALIGN		128
@@ -141,9 +142,6 @@ static int ixgbe_tx_xmit_ctx(struct tx_queue *txq, int ol_flags, int ctx_idx);
 extern int optind;
 
 static DEFINE_SPINLOCK(ixgbe_dev_lock);
-
-static struct rte_eth_rxconf rx_conf;
-static struct rte_eth_txconf tx_conf;
 
 static void allmulticast_enable(struct ix_rte_eth_dev *dev)
 {
@@ -899,222 +897,11 @@ static struct ix_eth_dev_ops vf_eth_dev_ops = {
 	.mac_addr_add = mac_addr_add,
 };
 
-static int rte_eal_pci_probe_one_driver(struct rte_pci_driver *dr, struct rte_pci_device *dev)
+int ixgbe_init(struct ix_rte_eth_dev *dev, const char *driver_name)
 {
-	const struct rte_pci_id *id_table;
-	int pipefd[2];
-
-	for (id_table = dr->id_table; id_table->vendor_id != 0; id_table++) {
-
-		/* check if device's identifiers match the driver's ones */
-		if (id_table->vendor_id != dev->id.vendor_id &&
-		    id_table->vendor_id != PCI_ANY_ID)
-			continue;
-		if (id_table->device_id != dev->id.device_id &&
-		    id_table->device_id != PCI_ANY_ID)
-			continue;
-		if (id_table->subsystem_vendor_id != dev->id.subsystem_vendor_id &&
-		    id_table->subsystem_vendor_id != PCI_ANY_ID)
-			continue;
-		if (id_table->subsystem_device_id != dev->id.subsystem_device_id &&
-		    id_table->subsystem_device_id != PCI_ANY_ID)
-			continue;
-
-		struct rte_pci_addr *loc = &dev->addr;
-
-		RTE_LOG(DEBUG, EAL, "PCI device "PCI_PRI_FMT" on NUMA socket %i\n",
-			loc->domain, loc->bus, loc->devid, loc->function,
-			dev->numa_node);
-
-		RTE_LOG(DEBUG, EAL, "  probe driver: %x:%x %s\n", dev->id.vendor_id,
-			dev->id.device_id, dr->name);
-
-		/* reference driver structure */
-		dev->driver = dr;
-
-		/* use a fake source for uio (interrupts) */
-		if (pipe(pipefd))
-			return 0;
-
-		dev->intr_handle.fd = pipefd[1];
-		dev->intr_handle.type = RTE_INTR_HANDLE_UIO;
-
-		/* call the driver devinit() function */
-		return dr->devinit(dr, dev);
-	}
-	/* return positive value if driver is not found */
-	return 1;
-}
-
-static int dpdk_devinit(struct pci_dev *pci_dev, struct rte_pci_driver **found_driver)
-{
-	int ret;
-	struct rte_pci_device *dpdk_pci_dev = NULL;
-	struct rte_pci_addr addr;
-	struct rte_pci_driver *driver;
-
-	addr.domain = pci_dev->addr.domain;
-	addr.bus = pci_dev->addr.bus;
-	addr.devid = pci_dev->addr.slot;
-	addr.function = pci_dev->addr.func;
-
-	*found_driver = NULL;
-
-	TAILQ_FOREACH(dpdk_pci_dev, &pci_device_list, next) {
-		if (rte_eal_compare_pci_addr(&dpdk_pci_dev->addr, &addr))
-			continue;
-
-		dpdk_pci_dev->mem_resource[0].addr = pci_map_mem_bar(pci_dev, &pci_dev->bars[0], 0);
-
-		TAILQ_FOREACH(driver, &pci_driver_list, next) {
-			ret = rte_eal_pci_probe_one_driver(driver, dpdk_pci_dev);
-
-			if (ret < 0) {
-				/* negative value is an error */
-				return -1;
-			} else if (ret > 0) {
-				/* positive value means driver not found */
-				continue;
-			}
-
-			/* driver found */
-			*found_driver = driver;
-			return 0;
-		}
-
-		/* driver not found */
-		return -1;
-	}
-
-	/* device not found */
-	return -1;
-}
-
-enum rte_eth_rx_mq_mode translate_conf_rxmode_mq_mode(enum ix_rte_eth_rx_mq_mode in)
-{
-	switch (in) {
-	case IX_ETH_MQ_RX_RSS:
-		return ETH_MQ_RX_RSS;
-	default:
-		assert(false);
-	}
-}
-
-enum rte_eth_tx_mq_mode translate_conf_txmode_mq_mode(enum ix_rte_eth_tx_mq_mode in)
-{
-	switch (in) {
-	case IX_ETH_MQ_TX_NONE:
-		return ETH_MQ_TX_NONE;
-	default:
-		assert(false);
-	}
-}
-
-uint16_t translate_conf_rss_hf(uint16_t in)
-{
-	uint16_t out = 0;
-
-#define COPY_AND_RESET(dst, src, bit_out, bit_in) \
-	if ((src) & (bit_in)) { \
-		(dst) |= (bit_out); \
-		(src) &= ~(bit_in); \
-	}
-
-	COPY_AND_RESET(out, in, ETH_RSS_NONFRAG_IPV4_TCP, ETH_RSS_IPV4_TCP);
-	COPY_AND_RESET(out, in, ETH_RSS_NONFRAG_IPV4_UDP, ETH_RSS_IPV4_UDP);
-
-#undef COPY_AND_RESET
-
-	assert(in == 0);
-
-	return out;
-}
-
-void translate_conf(struct rte_eth_conf *out, struct ix_rte_eth_conf *in)
-{
-	char *p;
-
-	memset(out, 0, sizeof(struct rte_eth_conf));
-
-#define COPY_AND_RESET(field) \
-	do { \
-		out->field = in->field; \
-		in->field = 0; \
-	} while (0)
-
-#define COPY_AND_RESET2(field, f) \
-	do { \
-		out->field = f(in->field); \
-		in->field = 0; \
-	} while (0)
-
-	COPY_AND_RESET2(rx_adv_conf.rss_conf.rss_hf, translate_conf_rss_hf);
-	COPY_AND_RESET(rxmode.header_split);
-	COPY_AND_RESET(rxmode.hw_ip_checksum);
-	COPY_AND_RESET(rxmode.hw_strip_crc);
-	COPY_AND_RESET(rxmode.hw_vlan_filter);
-	COPY_AND_RESET(rxmode.jumbo_frame);
-	COPY_AND_RESET2(rxmode.mq_mode, translate_conf_rxmode_mq_mode);
-	COPY_AND_RESET(rxmode.split_hdr_size);
-	COPY_AND_RESET2(txmode.mq_mode, translate_conf_txmode_mq_mode);
-
-#undef COPY_AND_RESET
-#undef COPY_AND_RESET2
-
-	for (p = (char *) in; p < (char *) in + sizeof(*in); p++)
-		assert(!*p);
-}
-
-int ixgbe_init(struct pci_dev *pci_dev, struct ix_rte_eth_dev **ethp)
-{
-	int i;
-	int ret;
-	struct ix_rte_eth_dev *dev;
-	struct rte_eth_dev_info dev_info;
-	struct rte_eth_conf conf;
-	struct rte_pci_driver *driver;
-	uint8_t port;
-
-	port = rte_eth_dev_find_free_port();
-
-	ret = dpdk_devinit(pci_dev, &driver);
-	if (ret < 0)
-		return ret;
-
-	rte_eth_dev_info_get(port, &dev_info);
-
-	rx_conf = dev_info.default_rxconf;
-	tx_conf = dev_info.default_txconf;
-
-	/* We don't need a dev_private, thus a 1-byte allocation. */
-	dev = eth_dev_alloc(1);
-	dev->port = port;
-	spin_lock_init(&dev->lock);
-
-	translate_conf(&conf, &dev->data->dev_conf);
-
-	conf.fdir_conf.mode = RTE_FDIR_MODE_PERFECT;
-	conf.fdir_conf.pballoc = RTE_FDIR_PBALLOC_256K;
-	conf.fdir_conf.status = RTE_FDIR_REPORT_STATUS;
-	conf.fdir_conf.mask.vlan_tci_mask = 0x0;
-	conf.fdir_conf.mask.ipv4_mask.src_ip = 0xFFFFFFFF;
-	conf.fdir_conf.mask.ipv4_mask.dst_ip = 0xFFFFFFFF;
-	conf.fdir_conf.mask.src_port_mask = 0xFFFF;
-	conf.fdir_conf.mask.dst_port_mask = 0xFFFF;
-	conf.fdir_conf.mask.mac_addr_byte_mask = 0;
-	conf.fdir_conf.mask.tunnel_type_mask = 0;
-	conf.fdir_conf.mask.tunnel_id_mask = 0;
-	conf.fdir_conf.drop_queue = 127;
-	conf.fdir_conf.flex_conf.nb_payloads = 0;
-	conf.fdir_conf.flex_conf.nb_flexmasks = 0;
-
-	ret = rte_eth_dev_configure(port, dev_info.max_rx_queues, dev_info.max_tx_queues, &conf);
-	if (ret < 0)
-		return ret;
-
-	if (!strcmp(driver->name, "rte_ixgbe_pmd")) {
+	if (!strcmp(driver_name, "rte_ixgbe_pmd")) {
 		dev->dev_ops = &eth_dev_ops;
-	} else if (!strcmp(driver->name, "rte_ixgbevf_pmd")) {
+	} else if (!strcmp(driver_name, "rte_ixgbevf_pmd")) {
 		dev->dev_ops = &vf_eth_dev_ops;
 		/* check that the config is right */
 		if (CFG.num_cpus > 1) {
@@ -1125,11 +912,6 @@ int ixgbe_init(struct pci_dev *pci_dev, struct ix_rte_eth_dev **ethp)
 	} else {
 		assert(0);
 	}
-
-	dev->data->mac_addrs = calloc(1, ETH_ADDR_LEN);
-	for (i = 0; i < ETHER_ADDR_LEN; i++)
-		dev->data->mac_addrs[0].addr[i] = rte_eth_devices[port].data->mac_addrs[0].addr_bytes[i];
-	*ethp = dev;
 
 	return 0;
 }

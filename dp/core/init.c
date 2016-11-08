@@ -44,6 +44,7 @@
 #include <ix/cfg.h>
 #include <ix/control_plane.h>
 #include <ix/log.h>
+#include <ix/drivers.h>
 
 #include <net/ip.h>
 
@@ -66,8 +67,6 @@ extern int net_init(void);
 extern int tcp_api_init(void);
 extern int tcp_api_init_cpu(void);
 extern int tcp_api_init_fg(void);
-extern int ixgbe_init(struct pci_dev *pci_dev,
-		      struct ix_rte_eth_dev **ethp);
 extern int sandbox_init(int argc, char *argv[]);
 extern void tcp_init(struct eth_fg *);
 extern int cp_init(void);
@@ -169,7 +168,7 @@ static int init_ethdev(void)
 			goto err;
 		}
 
-		ret = ixgbe_init(dev, &eth);
+		ret = driver_init(dev, &eth);
 		if (ret) {
 			log_err("init: failed to start driver\n");
 			free(dev);
