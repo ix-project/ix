@@ -221,9 +221,8 @@ struct ix_rte_eth_rss_conf {
 #define ETH_RSS_IPV4_UDP    0x0040 /**< IPv4/UDP packet. */
 #define ETH_RSS_IPV6_UDP    0x0080 /**< IPv6/UDP packet. */
 #define ETH_RSS_IPV6_UDP_EX 0x0100 /**< IPv6/UDP with extension headers. */
-/* Definitions used for redirection table entry size */
-#define ETH_RSS_RETA_NUM_ENTRIES 128
-#define ETH_RSS_RETA_MAX_QUEUE   16
+/* Definitions used for redirection table */
+#define ETH_RSS_RETA_MAX_QUEUE		16 /**< Use one RX queue per thread, 16 HTs on our servers */
 
 /* Definitions used for VMDQ and DCB functionality */
 #define ETH_VMDQ_MAX_VLAN_FILTERS   64 /**< Maximum nb. of VMDQ vlan filters. */
@@ -292,11 +291,8 @@ struct rte_eth_vmdq_mirror_conf {
  * Scaling (RSS) feature of an Ethernet port.
  */
 struct rte_eth_rss_reta {
-	/** First 64 mask bits indicate which entry(s) need to updated/queried. */
-	uint64_t mask_lo;
-	/** Second 64 mask bits indicate which entry(s) need to updated/queried. */
-	uint64_t mask_hi;
-	uint8_t reta[ETH_RSS_RETA_NUM_ENTRIES];  /**< 128 RETA entries*/
+	DEFINE_BITMAP(mask, ETH_MAX_NUM_FG); /**< Mask bits indicate which entry(s) need to updated/queried. */
+	uint16_t reta[ETH_MAX_NUM_FG];  /**< RETA entries */
 };
 
 /**

@@ -273,12 +273,8 @@ static int reta_update(struct ix_rte_eth_dev *dev, struct rte_eth_rss_reta *reta
 	* Update Redirection Table RETA[n],n=0...31,The redirection table has
 	* 128-entries in 32 registers
 	 */
-	for (i = 0; i < ETH_RSS_RETA_NUM_ENTRIES; i += 4) {
-		if (i < ETH_RSS_RETA_NUM_ENTRIES / 2)
-			mask = (uint8_t)((reta_conf->mask_lo >> i) & 0xF);
-		else
-			mask = (uint8_t)((reta_conf->mask_hi >>
-					  (i - ETH_RSS_RETA_NUM_ENTRIES / 2)) & 0xF);
+	for (i = 0; i < dev->data->nb_rx_fgs; i += 4) {
+		mask = (uint8_t)((reta_conf->mask[BITMAP_POS_IDX(i)] >> BITMAP_POS_SHIFT(i)) & 0xF);
 		if (mask != 0) {
 			reta = 0;
 			if (mask != 0xF)
@@ -371,7 +367,7 @@ static int ixgbe_rx_poll(struct eth_rx_queue *rx)
 			b->fg_id = MBUF_INVALID_FG_ID;
 		} else {
 			local_fg_id = (le32_to_cpu(rxd.wb.lower.hi_dword.rss) &
-				       (ETH_RSS_RETA_NUM_ENTRIES - 1));
+				       (rx->dev->data->nb_rx_fgs - 1));
 			b->fg_id = rx->dev->data->rx_fgs[local_fg_id].fg_id;
 		}
 		b->timestamp = timestamp;

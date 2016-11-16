@@ -35,7 +35,7 @@
 #include <ix/timer.h>
 #include <ix/bitmap.h>
 
-#define ETH_MAX_NUM_FG	128
+#define ETH_MAX_NUM_FG	512
 
 #define NETHDEV	16
 #define ETH_MAX_TOTAL_FG (ETH_MAX_NUM_FG * NETHDEV)

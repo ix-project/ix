@@ -150,11 +150,7 @@ static int eth_fg_assign_single_to_cpu(int fg_id, int cpu, struct rte_eth_rss_re
 		ret = 1;
 	}
 
-	if (fg->idx >= 64)
-		rss_reta->mask_hi |= ((uint64_t) 1) << (fg->idx - 64);
-	else
-		rss_reta->mask_lo |= ((uint64_t) 1) << fg->idx;
-
+	bitmap_set(rss_reta->mask, fg->idx);
 	rss_reta->reta[fg->idx] = cpu;
 	cp_shmem->flow_group[fg_id].cpu = cpu;
 	*eth = fg->eth;
@@ -238,8 +234,7 @@ void eth_fg_assign_to_cpu(bitmap_ptr fg_bitmap, int cpu)
 
 	for (i = 0; i < NETHDEV; i++) {
 		first_eth = NULL;
-		rss_reta[i].mask_lo = 0;
-		rss_reta[i].mask_hi = 0;
+		bitmap_init(rss_reta[i].mask, ETH_MAX_NUM_FG, 0);
 		eth[i] = NULL;
 
 		for (j = 0; j < ETH_MAX_NUM_FG; j++) {

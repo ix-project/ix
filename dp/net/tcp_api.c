@@ -645,7 +645,7 @@ struct eth_fg *get_local_port_and_set_queue(struct ip_tuple *id)
 		if (percpu_get(local_port) >= (percpu_get(cpu_id) + 1) * PORTS_PER_CPU)
 			percpu_get(local_port) = percpu_get(cpu_id) * PORTS_PER_CPU + 1;
 		hash = compute_toeplitz_hash(rss_conf.rss_key, htonl(id->dst_ip), htonl(id->src_ip), htons(id->dst_port), htons(id->src_port));
-		fg_idx = hash & (ETH_RSS_RETA_NUM_ENTRIES - 1);
+		fg_idx = hash & (dev->data->nb_rx_fgs - 1);
 		if (percpu_get(eth_rxqs[0])->dev->data->rx_fgs[fg_idx].cur_cpu == percpu_get(cpu_id)) {
 			//set_current_queue(percpu_get(eth_rxqs)[0]);
 
