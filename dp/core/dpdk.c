@@ -59,7 +59,6 @@ int dpdk_init(void)
 	const int pool_size = 32768;
 
 	optind = 0;
-	internal_config.no_hugetlbfs = 1;
 	ret = rte_eal_init(sizeof(argv) / sizeof(argv[0]), argv);
 	if (ret < 0)
 		return ret;
