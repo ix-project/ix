@@ -89,6 +89,7 @@ struct drv_init_tble {
 struct drv_init_tble drv_init_tbl[] = {
 	{ "rte_ixgbe_pmd", ixgbe_init },
 	{ "rte_ixgbevf_pmd", ixgbe_init },
+	{ "rte_i40e_pmd", i40e_init },
 	{ NULL, NULL }
 };
 

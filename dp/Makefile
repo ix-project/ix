@@ -26,7 +26,7 @@
 DPDK	= ../deps/dpdk
 DUNE	= ../deps/dune
 PCIDMA	= ../deps/pcidma
-DPDK_INC = -I$(DPDK)/build/include -I$(DPDK)/lib/librte_eal/common -I$(DPDK)/drivers/net/ixgbe
+DPDK_INC = -I$(DPDK)/build/include -I$(DPDK)/lib/librte_eal/common -I$(DPDK)/drivers/net/ixgbe -I$(DPDK)/drivers/net/i40e
 INC	= -I../inc -I$(DUNE)/libdune -I../inc/lwip -I../inc/lwip/ipv4 -I../inc/lwip/ipv6 $(DPDK_INC) -include$(DUNE)/kern/dune.h
 INC	+= -I$(PCIDMA)
 CC	= gcc
@@ -72,6 +72,7 @@ endif
 
 DPDK_LIBS=
 DPDK_LIBS+=-Wl,-whole-archive $(DPDK)/build/lib/librte_pmd_ixgbe.a -Wl,-no-whole-archive
+DPDK_LIBS+=-Wl,-whole-archive $(DPDK)/build/lib/librte_pmd_i40e.a -Wl,-no-whole-archive
 DPDK_LIBS+=$(DPDK)/build/lib/libethdev.a
 DPDK_LIBS+=$(DPDK)/build/lib/librte_mbuf.a
 DPDK_LIBS+=$(DPDK)/build/lib/librte_eal.a

@@ -34,6 +34,7 @@ extern struct rte_eth_txconf tx_conf;
 
 /* driver specific initialization functions */
 int ixgbe_init(struct ix_rte_eth_dev *dev, const char *driver_name);
+int i40e_init(struct ix_rte_eth_dev *dev, const char *driver_name);
 
 /* driver-independent eth_dev_ops */
 void generic_allmulticast_enable(struct ix_rte_eth_dev *dev);
