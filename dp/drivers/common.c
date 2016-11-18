@@ -325,3 +325,109 @@ int driver_init(struct pci_dev *pci_dev, struct ix_rte_eth_dev **ethp)
 
 	return 0;
 }
+
+void generic_allmulticast_enable(struct ix_rte_eth_dev *dev)
+{
+	rte_eth_allmulticast_enable(dev->port);
+}
+
+void generic_dev_infos_get(struct ix_rte_eth_dev *dev, struct ix_rte_eth_dev_info *dev_info)
+{
+	struct rte_eth_dev_info dpdk_dev_info;
+
+	rte_eth_dev_info_get(dev->port, &dpdk_dev_info);
+	dev_info->nb_rx_fgs = dpdk_dev_info.reta_size;
+	dev_info->max_rx_queues = dpdk_dev_info.max_rx_queues;
+	dev_info->max_tx_queues = dpdk_dev_info.max_tx_queues;
+	/* NOTE: the rest of the fields are not used so we don't fill them in */
+}
+
+int generic_link_update(struct ix_rte_eth_dev *dev, int wait_to_complete)
+{
+	struct rte_eth_link dev_link;
+
+	if (wait_to_complete)
+		rte_eth_link_get(dev->port, &dev_link);
+	else
+		rte_eth_link_get_nowait(dev->port, &dev_link);
+
+	dev->data->dev_link.link_speed = dev_link.link_speed;
+	dev->data->dev_link.link_duplex = dev_link.link_duplex;
+	dev->data->dev_link.link_status = dev_link.link_status;
+
+	return 0;
+}
+
+void generic_promiscuous_disable(struct ix_rte_eth_dev *dev)
+{
+	rte_eth_promiscuous_disable(dev->port);
+}
+
+static void init_filter(struct rte_eth_fdir_filter *filter, struct rte_fdir_filter *in)
+{
+	memset(filter, 0, sizeof(*filter));
+
+	assert(in->iptype == RTE_FDIR_IPTYPE_IPV4);
+	assert(in->l4type == RTE_FDIR_L4TYPE_TCP);
+
+	filter->input.flow_type = RTE_ETH_FLOW_NONFRAG_IPV4_TCP;
+	filter->input.flow.tcp4_flow.ip.src_ip = ntoh32(in->ip_src.ipv4_addr);
+	filter->input.flow.tcp4_flow.ip.dst_ip = ntoh32(in->ip_dst.ipv4_addr);
+	filter->input.flow.tcp4_flow.src_port = hton16(in->port_src);
+	filter->input.flow.tcp4_flow.dst_port = hton16(in->port_dst);
+}
+
+int generic_fdir_add_perfect_filter(struct ix_rte_eth_dev *dev, struct rte_fdir_filter *fdir_ftr, uint16_t soft_id, uint8_t rx_queue, uint8_t drop)
+{
+	int ret;
+	struct rte_eth_fdir_filter filter;
+
+	init_filter(&filter, fdir_ftr);
+
+	filter.action.behavior = drop ? RTE_ETH_FDIR_REJECT : RTE_ETH_FDIR_ACCEPT;
+	filter.action.report_status = RTE_ETH_FDIR_REPORT_ID;
+	filter.action.rx_queue = rx_queue;
+	filter.soft_id = soft_id;
+
+	spin_lock(&dev->lock);
+	ret = rte_eth_dev_filter_ctrl(dev->port, RTE_ETH_FILTER_FDIR, RTE_ETH_FILTER_ADD, &filter);
+	spin_unlock(&dev->lock);
+	return ret;
+}
+
+int generic_fdir_remove_perfect_filter(struct ix_rte_eth_dev *dev, struct rte_fdir_filter *fdir_ftr, uint16_t soft_id)
+{
+	int ret;
+	struct rte_eth_fdir_filter filter;
+
+	init_filter(&filter, fdir_ftr);
+
+	spin_lock(&dev->lock);
+	ret = rte_eth_dev_filter_ctrl(dev->port, RTE_ETH_FILTER_FDIR, RTE_ETH_FILTER_DELETE, &filter);
+	spin_unlock(&dev->lock);
+	return ret;
+}
+
+int generic_rss_hash_conf_get(struct ix_rte_eth_dev *dev, struct ix_rte_eth_rss_conf *ix_reta_conf)
+{
+	int ret;
+	struct rte_eth_rss_conf reta_conf;
+
+	ret = rte_eth_dev_rss_hash_conf_get(dev->port, &reta_conf);
+	if (ret < 0)
+		return ret;
+
+	ix_reta_conf->rss_key = reta_conf.rss_key;
+	ix_reta_conf->rss_hf = reta_conf.rss_hf;
+
+	return ret;
+}
+
+void generic_mac_addr_add(struct ix_rte_eth_dev *dev, struct eth_addr *mac_addr, uint32_t index, uint32_t vmdq)
+{
+	struct ether_addr addr;
+
+	memcpy(addr.addr_bytes, mac_addr->addr, ETH_ADDR_LEN);
+
+	rte_eth_dev_mac_addr_add(dev->port, &addr, vmdq);
+}

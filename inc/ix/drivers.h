@@ -34,3 +34,13 @@ extern struct rte_eth_txconf tx_conf;
 
 /* driver specific initialization functions */
 int ixgbe_init(struct ix_rte_eth_dev *dev, const char *driver_name);
+
+/* driver-independent eth_dev_ops */
+void generic_allmulticast_enable(struct ix_rte_eth_dev *dev);
+void generic_dev_infos_get(struct ix_rte_eth_dev *dev, struct ix_rte_eth_dev_info *dev_info);
+int generic_link_update(struct ix_rte_eth_dev *dev, int wait_to_complete);
+void generic_promiscuous_disable(struct ix_rte_eth_dev *dev);
+int generic_fdir_add_perfect_filter(struct ix_rte_eth_dev *dev, struct rte_fdir_filter *fdir_ftr, uint16_t soft_id, uint8_t rx_queue, uint8_t drop);
+int generic_fdir_remove_perfect_filter(struct ix_rte_eth_dev *dev, struct rte_fdir_filter *fdir_ftr, uint16_t soft_id);
+int generic_rss_hash_conf_get(struct ix_rte_eth_dev *dev, struct ix_rte_eth_rss_conf *ix_reta_conf);
+void generic_mac_addr_add(struct ix_rte_eth_dev *dev, struct eth_addr *mac_addr, uint32_t index, uint32_t vmdq);

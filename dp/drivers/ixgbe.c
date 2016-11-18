@@ -143,22 +143,6 @@ extern int optind;
 
 static DEFINE_SPINLOCK(ixgbe_dev_lock);
 
-static void allmulticast_enable(struct ix_rte_eth_dev *dev)
-{
-	rte_eth_allmulticast_enable(dev->port);
-}
-
-static void dev_infos_get(struct ix_rte_eth_dev *dev, struct ix_rte_eth_dev_info *dev_info)
-{
-	struct rte_eth_dev_info dpdk_dev_info;
-
-	rte_eth_dev_info_get(dev->port, &dpdk_dev_info);
-	dev_info->nb_rx_fgs = 128;
-	dev_info->max_rx_queues = dpdk_dev_info.max_rx_queues;
-	dev_info->max_tx_queues = dpdk_dev_info.max_tx_queues;
-	/* NOTE: the rest of the fields are not used so we don't fill them in */
-}
-
 static int dev_start(struct ix_rte_eth_dev *dev)
 {
 	int i;
@@ -237,27 +221,6 @@ static int dev_start_vf(struct ix_rte_eth_dev *dev)
 	}
 
 	return 0;
-}
-
-static int link_update(struct ix_rte_eth_dev *dev, int wait_to_complete)
-{
-	struct rte_eth_link dev_link;
-
-	if (wait_to_complete)
-		rte_eth_link_get(dev->port, &dev_link);
-	else
-		rte_eth_link_get_nowait(dev->port, &dev_link);
-
-	dev->data->dev_link.link_speed = dev_link.link_speed;
-	dev->data->dev_link.link_duplex = dev_link.link_duplex;
-	dev->data->dev_link.link_status = dev_link.link_status;
-
-	return 0;
-}
-
-static void promiscuous_disable(struct ix_rte_eth_dev *dev)
-{
-	rte_eth_promiscuous_disable(dev->port);
 }
 
 static int reta_update(struct ix_rte_eth_dev *dev, struct rte_eth_rss_reta *reta_conf)
@@ -794,103 +757,34 @@ err:
 	return ret;
 }
 
-static void init_filter(struct rte_eth_fdir_filter *filter, struct rte_fdir_filter *in)
-{
-	memset(filter, 0, sizeof(*filter));
-
-	assert(in->iptype == RTE_FDIR_IPTYPE_IPV4);
-	assert(in->l4type == RTE_FDIR_L4TYPE_TCP);
-
-	filter->input.flow_type = RTE_ETH_FLOW_NONFRAG_IPV4_TCP;
-	filter->input.flow.tcp4_flow.ip.src_ip = ntoh32(in->ip_src.ipv4_addr);
-	filter->input.flow.tcp4_flow.ip.dst_ip = ntoh32(in->ip_dst.ipv4_addr);
-	filter->input.flow.tcp4_flow.src_port = hton16(in->port_src);
-	filter->input.flow.tcp4_flow.dst_port = hton16(in->port_dst);
-}
-
-static int fdir_add_perfect_filter(struct ix_rte_eth_dev *dev, struct rte_fdir_filter *fdir_ftr, uint16_t soft_id, uint8_t rx_queue, uint8_t drop)
-{
-	int ret;
-	struct rte_eth_fdir_filter filter;
-
-	init_filter(&filter, fdir_ftr);
-
-	filter.action.behavior = drop ? RTE_ETH_FDIR_REJECT : RTE_ETH_FDIR_ACCEPT;
-	filter.action.report_status = RTE_ETH_FDIR_REPORT_ID;
-	filter.action.rx_queue = rx_queue;
-	filter.soft_id = soft_id;
-
-	spin_lock(&dev->lock);
-	ret = rte_eth_dev_filter_ctrl(dev->port, RTE_ETH_FILTER_FDIR, RTE_ETH_FILTER_ADD, &filter);
-	spin_unlock(&dev->lock);
-	return ret;
-}
-
-static int fdir_remove_perfect_filter(struct ix_rte_eth_dev *dev, struct rte_fdir_filter *fdir_ftr, uint16_t soft_id)
-{
-	int ret;
-	struct rte_eth_fdir_filter filter;
-
-	init_filter(&filter, fdir_ftr);
-
-	spin_lock(&dev->lock);
-	ret = rte_eth_dev_filter_ctrl(dev->port, RTE_ETH_FILTER_FDIR, RTE_ETH_FILTER_DELETE, &filter);
-	spin_unlock(&dev->lock);
-	return ret;
-}
-
-static int rss_hash_conf_get(struct ix_rte_eth_dev *dev, struct ix_rte_eth_rss_conf *ix_reta_conf)
-{
-	int ret;
-	struct rte_eth_rss_conf reta_conf;
-
-	ret = rte_eth_dev_rss_hash_conf_get(dev->port, &reta_conf);
-	if (ret < 0)
-		return ret;
-
-	ix_reta_conf->rss_key = reta_conf.rss_key;
-	ix_reta_conf->rss_hf = reta_conf.rss_hf;
-
-	return ret;
-}
-
-static void mac_addr_add(struct ix_rte_eth_dev *dev, struct eth_addr *mac_addr, uint32_t index, uint32_t vmdq)
-{
-	struct ether_addr addr;
-
-	memcpy(addr.addr_bytes, mac_addr->addr, ETH_ADDR_LEN);
-
-	rte_eth_dev_mac_addr_add(dev->port, &addr, vmdq);
-}
-
 static struct ix_eth_dev_ops eth_dev_ops = {
-	.allmulticast_enable = allmulticast_enable,
-	.dev_infos_get = dev_infos_get,
+	.allmulticast_enable = generic_allmulticast_enable,
+	.dev_infos_get = generic_dev_infos_get,
 	.dev_start = dev_start,
-	.link_update = link_update,
-	.promiscuous_disable = promiscuous_disable,
+	.link_update = generic_link_update,
+	.promiscuous_disable = generic_promiscuous_disable,
 	.reta_update = reta_update,
 	.rx_queue_setup = rx_queue_setup,
 	.tx_queue_setup = tx_queue_setup,
-	.fdir_add_perfect_filter = fdir_add_perfect_filter,
-	.fdir_remove_perfect_filter = fdir_remove_perfect_filter,
-	.rss_hash_conf_get = rss_hash_conf_get,
-	.mac_addr_add = mac_addr_add,
+	.fdir_add_perfect_filter = generic_fdir_add_perfect_filter,
+	.fdir_remove_perfect_filter = generic_fdir_remove_perfect_filter,
+	.rss_hash_conf_get = generic_rss_hash_conf_get,
+	.mac_addr_add = generic_mac_addr_add,
 };
 
 static struct ix_eth_dev_ops vf_eth_dev_ops = {
-	.allmulticast_enable = allmulticast_enable,
-	.dev_infos_get = dev_infos_get,
+	.allmulticast_enable = generic_allmulticast_enable,
+	.dev_infos_get = generic_dev_infos_get,
 	.dev_start = dev_start_vf,
-	.link_update = link_update,
-	.promiscuous_disable = promiscuous_disable,
+	.link_update = generic_link_update,
+	.promiscuous_disable = generic_promiscuous_disable,
 	.reta_update = reta_update,
 	.rx_queue_setup = rx_queue_setup,
 	.tx_queue_setup = tx_queue_setup,
-	.fdir_add_perfect_filter = fdir_add_perfect_filter,
-	.fdir_remove_perfect_filter = fdir_remove_perfect_filter,
-	.rss_hash_conf_get = rss_hash_conf_get,
-	.mac_addr_add = mac_addr_add,
+	.fdir_add_perfect_filter = generic_fdir_add_perfect_filter,
+	.fdir_remove_perfect_filter = generic_fdir_remove_perfect_filter,
+	.rss_hash_conf_get = generic_rss_hash_conf_get,
+	.mac_addr_add = generic_mac_addr_add,
 };
 
 int ixgbe_init(struct ix_rte_eth_dev *dev, const char *driver_name)
