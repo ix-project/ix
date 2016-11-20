@@ -54,6 +54,8 @@ struct eth_rx_queue {
 
 	/* poll for new packets */
 	int (*poll)(struct eth_rx_queue *rx);
+	/* returns if new packets are available */
+	bool (*ready)(struct eth_rx_queue *rx);
 
 	/* a bitmap of flow groups directed to this queue */
 	DEFINE_BITMAP(assigned_fgs, ETH_MAX_NUM_FG);

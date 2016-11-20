@@ -375,35 +375,14 @@ out:
 	return nb_descs;
 }
 
-/* FIXME: make this driver independent */
-bool eth_rx_idle_wait(uint64_t usecs)
+static bool ixgbe_rx_ready(struct eth_rx_queue *rx)
 {
-	volatile union ixgbe_adv_rx_desc **addrs;
-	unsigned int i;
-	unsigned long start, cycles = usecs * cycles_per_us;
+	volatile union ixgbe_adv_rx_desc *desc;
+	struct rx_queue *rxq;
 
-	addrs = alloca(sizeof(union ixgbe_adv_rx_desc *) *
-		       percpu_get(eth_num_queues));
-
-	for (i = 0; i < percpu_get(eth_num_queues); i++) {
-		struct eth_rx_queue *rx = percpu_get(eth_rxqs[i]);
-		struct rx_queue *rxq = eth_rx_queue_to_drv(rx);
-		addrs[i] = &rxq->ring[rxq->head & (rxq->len - 1)];
-	}
-
-	start = rdtsc();
-
-	do {
-		for (i = 0; i < percpu_get(eth_num_queues); i++) {
-			if (addrs[i]->wb.upper.status_error &
-			    cpu_to_le32(IXGBE_RXDADV_STAT_DD))
-				return true;
-		}
-
-		cpu_relax();
-	} while (rdtsc() - start < cycles);
-
-	return false;
+	rxq = eth_rx_queue_to_drv(rx);
+	desc = &rxq->ring[rxq->head & (rxq->len - 1)];
+	return desc->wb.upper.status_error & cpu_to_le32(IXGBE_RXDADV_STAT_DD);
 }
 
 /**
@@ -483,6 +462,7 @@ static int rx_queue_setup(struct ix_rte_eth_dev *dev, int queue_idx,
 
 	rxq->rdt_reg_addr = drxq->rdt_reg_addr;
 	rxq->erxq.poll = ixgbe_rx_poll;
+	rxq->erxq.ready = ixgbe_rx_ready;
 	dev->data->rx_queues[queue_idx] = &rxq->erxq;
 	return 0;
 

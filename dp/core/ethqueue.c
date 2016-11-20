@@ -248,3 +248,21 @@ void eth_process_reclaim(void)
 	}
 }
 
+bool eth_rx_idle_wait(uint64_t usecs)
+{
+	int i;
+	struct eth_rx_queue *rxq;
+	unsigned long start, cycles = usecs * cycles_per_us;
+
+	start = rdtsc();
+	do {
+		for (i = 0; i < percpu_get(eth_num_queues); i++) {
+			rxq = percpu_get(eth_rxqs[i]);
+			if(rxq->ready(rxq))
+				return true;
+		}
+		cpu_relax();
+	} while (rdtsc() - start < cycles);
+
+	return false;
+}
