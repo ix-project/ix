@@ -442,6 +442,7 @@ def main():
   parser.add_argument('--background-pid', type=int)
   parser.add_argument('--background-cpus', type=str)
   parser.add_argument('--print-power', action='store_true')
+  parser.add_argument('--print-queues', action='store_true')
   args = parser.parse_args()
 
   if args.background_cpus is not None:
@@ -549,6 +550,11 @@ def main():
       time.sleep(.1)
   elif args.print_power:
     print shmem.pkg_power
+  elif args.print_queues:
+    for cpu in xrange(shmem.nr_cpus):
+      if shmem.command[cpu].cpu_state == Command.CP_CPU_STATE_RUNNING:
+        q = shmem.cpu_metrics[cpu].queue_size
+        print '%d %f/%f/%f' % (cpu, q[0], q[1], q[2])
 
 if __name__ == '__main__':
   main()
