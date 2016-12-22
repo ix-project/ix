@@ -30,9 +30,9 @@ DPDK_INC = -I$(DPDK)/build/include -I$(DPDK)/lib/librte_eal/common -I$(DPDK)/dri
 INC	= -I../inc -I$(DUNE)/libdune -I../inc/lwip -I../inc/lwip/ipv4 -I../inc/lwip/ipv6 $(DPDK_INC) -include$(DUNE)/kern/dune.h
 INC	+= -I$(PCIDMA)
 CC	= gcc
-CFLAGS	= -g -Wall -fno-dwarf2-cfi-asm -fno-asynchronous-unwind-tables -O3 -mno-red-zone $(INC) -D__KERNEL__ $(EXTRA_CFLAGS)
+CFLAGS	= -g -Wall -fno-pie -fno-dwarf2-cfi-asm -fno-asynchronous-unwind-tables -O3 -mno-red-zone $(INC) -D__KERNEL__ $(EXTRA_CFLAGS)
 LD	= gcc
-LDFLAGS	= -T ix.ld
+LDFLAGS	= -T ix.ld -no-pie
 LDLIBS	= -lrt -lpthread -lm -lnuma -ldl -lconfig
 
 ifneq ($(DEBUG),)
