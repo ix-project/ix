@@ -157,10 +157,13 @@ static struct arp_entry *arp_lookup(struct ip_addr *addr, bool create_okay)
 
 static void send_pending_pkt(void *data)
 {
+	int ret;
 	struct pending_pkt *pkt = data;
 
-	ip_send_one(pkt->fg, &pkt->dst_addr, pkt->mbuf, pkt->len);
-
+	ret = ip_send_one(pkt->fg, &pkt->dst_addr, pkt->mbuf, pkt->len);
+	if (unlikely(ret))
+		mbuf_free(pkt->mbuf);
+	
 	spin_lock(&pending_pkt_lock);
 	hlist_del(&pkt->link);
 	mempool_free(&pending_pkt_mempool, pkt);

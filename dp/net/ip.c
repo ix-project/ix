@@ -212,10 +212,8 @@ int ip_send_one(struct eth_fg *cur_fg, struct ip_addr *dst_addr, struct mbuf *pk
 	txq = percpu_get(eth_txqs)[cur_fg->dev_idx];
 
 	ret = eth_send_one(txq, pkt, len);
-	if (unlikely(ret)) {
-		mbuf_free(pkt);
+	if (unlikely(ret))
 		return -EIO;
-	}
 
 	return 0;
 }
