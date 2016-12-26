@@ -326,11 +326,8 @@ static int reta_update(struct ix_rte_eth_dev *dev, struct rte_eth_rss_reta *reta
 	struct rte_eth_dev r_dev = rte_eth_devices[dev->port];
 
 	/* first convert reta_conf to dpdk format*/
-	for (i = 0; i < dev->data->nb_rx_fgs / 64; i++) {
-		r_reta_conf[i].mask = reta_conf->mask[BITMAP_POS_IDX(i * 64)] & 0xFFFFFFFF;
-		r_reta_conf[i].mask = (reta_conf->mask[BITMAP_POS_IDX(i * 64 + 32)]
-				>> BITMAP_POS_SHIFT(32)) & 0xFFFFFFFF;
-	}
+	for (i = 0; i < dev->data->nb_rx_fgs / 64; i++)
+		r_reta_conf[i].mask = reta_conf->mask[BITMAP_POS_IDX(i * 64)] >> BITMAP_POS_SHIFT(i * 64);
 
 	for (i = 0; i < dev->data->nb_rx_fgs / 64; ++i)
 		for (j = 0; j < 64; j++)
