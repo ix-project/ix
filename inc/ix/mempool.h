@@ -186,20 +186,20 @@ static inline void mempool_free(struct mempool *m, void *ptr)
 		mempool_free_2(m, ptr);
 }
 
-static inline void *mempool_idx_to_ptr(struct mempool *m, uint32_t idx, int elem_len)
+static inline void *mempool_idx_to_ptr(struct mempool *m, uint32_t idx)
 {
 	void *p;
 	assert(idx < m->nr_elems);
 	assert(!m->nostraddle);
-	p = m->buf + elem_len * idx + MEMPOOL_INITIAL_OFFSET;
+	p = m->buf + m->elem_len * idx + MEMPOOL_INITIAL_OFFSET;
 	MEMPOOL_SANITY_ACCESS(p);
 	return p;
 }
 
-static inline uintptr_t mempool_ptr_to_idx(struct mempool *m, void *p, int elem_len)
+static inline uintptr_t mempool_ptr_to_idx(struct mempool *m, void *p)
 {
 	uintptr_t x = (uintptr_t)p - (uintptr_t)m->buf - MEMPOOL_INITIAL_OFFSET;
-	x = x / elem_len;
+	x = x / m->elem_len;
 	assert(x < m->nr_elems);
 	return x;
 }
