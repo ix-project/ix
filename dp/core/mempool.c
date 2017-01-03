@@ -155,11 +155,13 @@ int mempool_init_buf_with_pages(struct mempool_datastore *mds, int elems_per_pag
 			chunk_count++;
 			if (chunk_count == mds->chunk_size) {
 				if (mds->chunk_head == NULL) {
+					head->next_chunk = NULL;
 					mds->chunk_head = head;
 				} else {
 					head->next_chunk = mds->chunk_head;
 					mds->chunk_head = head;
 				}
+				prev->next = NULL;
 				head = NULL;
 				prev = NULL;
 				chunk_count = 0;
