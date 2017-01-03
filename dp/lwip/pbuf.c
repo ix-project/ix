@@ -282,6 +282,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
   p->ref = 1;
   /* set flags */
   p->flags = 0;
+  p->mbuf = NULL;
   LWIP_DEBUGF(PBUF_DEBUG | LWIP_DBG_TRACE, ("pbuf_alloc(length=%"U16_F") == %p\n", length, (void *)p));
   return p;
 }
