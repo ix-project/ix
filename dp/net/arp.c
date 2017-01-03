@@ -146,6 +146,7 @@ static struct arp_entry *arp_lookup(struct ip_addr *addr, bool create_okay)
 		e->addr.addr = addr->addr;
 		e->flags = 0;
 		e->retries = 0;
+		hlist_init_head(&e->pending_pkts);
 		timer_init_entry(&e->timer, &arp_timer_handler);
 		hlist_add_head(h, &e->link);
 		spin_unlock(&arp_lock);
@@ -406,6 +407,7 @@ int arp_insert(struct ip_addr *addr, struct eth_addr *mac)
 		e->addr.addr = addr->addr;
 		e->flags = ARP_FLAG_VALID | ARP_FLAG_STATIC;
 		e->retries = 0;
+		hlist_init_head(&e->pending_pkts);
 		timer_init_entry(&e->timer, NULL);
 		hlist_add_head(h, &e->link);
 	}
