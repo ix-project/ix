@@ -129,7 +129,7 @@ static void *cpu_init_percpu(unsigned int cpu, unsigned int numa_node)
 
 	addr = mem_alloc_pages_onnode(div_up(len + PERCPU_DUNE_LEN, PGSIZE_2MB),
 				      PGSIZE_2MB, numa_node, MPOL_BIND);
-	if (!addr)
+	if (addr == MAP_FAILED)
 		return NULL;
 
 	addr_percpu = addr + PERCPU_DUNE_LEN;

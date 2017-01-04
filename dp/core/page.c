@@ -88,7 +88,7 @@ void *page_alloc_contig_on_node(unsigned int nr, int numa_node)
 
 
 	base = __mem_alloc_pages_onnode(base, nr, PGSIZE_2MB, numa_node);
-	if (!base)
+	if (base == MAP_FAILED)
 		return NULL;
 
 	for (i = 0; i < nr; i++) {

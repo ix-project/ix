@@ -116,7 +116,7 @@ int eth_fg_init_cpu(struct eth_fg *fg)
 	addr = mem_alloc_pages_onnode(div_up(len, PGSIZE_2MB),
 				      PGSIZE_2MB, percpu_get(cpu_numa_node),
 				      MPOL_BIND);
-	if (!addr)
+	if (addr == MAP_FAILED)
 		return -ENOMEM;
 
 	memset(addr, 0, len);
