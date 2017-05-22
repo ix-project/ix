@@ -34,6 +34,7 @@
 #include <ix/ethdev.h>
 #include <ix/kstats.h>
 #include <ix/cfg.h>
+#include <ix/config.h>
 
 #include <lwip/tcp.h>
 
@@ -48,6 +49,13 @@ static DEFINE_PERCPU(struct tcp_pcb_listen[CFG_MAX_PORTS], listen_ports);
 static DEFINE_PERCPU(uint16_t, local_port);
 /* FIXME: this should be more adaptive to various configurations */
 #define PORTS_PER_CPU (65536 / 32)
+
+#if CONFIG_PRINT_CONNECTION_COUNT
+
+static DEFINE_PERCPU(int, open_connections);
+static DEFINE_PERCPU(struct timer, print_conn_timer);
+
+#endif
 
 /*
  * FIXME: LWIP and IX have different lifetime rules so we have to maintain
@@ -341,8 +349,27 @@ long bsys_tcp_close(hid_t handle)
 	return RET_OK;
 }
 
+#if CONFIG_PRINT_CONNECTION_COUNT
+
+static void __print_conn(struct timer *t, struct eth_fg *cur_fg)
+{
+	log_info("open connections = %d\n", percpu_get(open_connections));
+}
+
+static void print_conn(int change)
+{
+	percpu_get(open_connections) += change;
+	timer_mod(&percpu_get(print_conn_timer), NULL, 1 * ONE_SECOND);
+}
+
+#endif
+
 static void mark_dead(struct tcpapi_pcb *api, unsigned long cookie)
 {
+#if CONFIG_PRINT_CONNECTION_COUNT
+	print_conn(-1);
+#endif
+
 	if (!api) {
 		usys_tcp_dead(0, cookie);
 		return;
@@ -479,6 +506,10 @@ static err_t on_accept(struct eth_fg *cur_fg, void *arg, struct tcp_pcb *pcb, er
 	api->handle = handle;
 	id = (struct ip_tuple *)
 	     mempool_pagemem_to_iomap(&percpu_get(id_mempool), id);
+
+#if CONFIG_PRINT_CONNECTION_COUNT
+	print_conn(1);
+#endif
 
 	usys_tcp_knock(handle, id);
 	return ERR_OK;
@@ -842,6 +873,9 @@ int tcp_api_init_cpu(void)
 
 //	percpu_get(port8000).accept = on_accept;
 
+#if CONFIG_PRINT_CONNECTION_COUNT
+	timer_init_entry(&percpu_get(print_conn_timer), __print_conn);
+#endif
 
 	return 0;
 }
