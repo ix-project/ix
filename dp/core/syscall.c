@@ -43,6 +43,7 @@
 #include <ix/control_plane.h>
 #include <ix/ethfg.h>
 #include <ix/utimer.h>
+#include <ix/stats.h>
 
 #include <dune.h>
 
@@ -148,6 +149,11 @@ static int sys_bpoll(struct bsys_desc __user *d, unsigned int nr)
 		return ret;
 
 again:
+
+#if CONFIG_STATS
+	stats_check_reset();
+#endif
+
 	switch (percpu_get(cp_cmd)->cmd_id) {
 	case CP_CMD_MIGRATE:
 		if (percpu_get(usys_arr)->len) {

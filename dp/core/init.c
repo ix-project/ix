@@ -45,6 +45,7 @@
 #include <ix/control_plane.h>
 #include <ix/log.h>
 #include <ix/drivers.h>
+#include <ix/stats.h>
 
 #include <net/ip.h>
 
@@ -91,6 +92,9 @@ static struct init_vector_t init_tbl[] = {
 	{ "net",     net_init,     NULL, NULL},
 	{ "cfg",     init_cfg,     NULL, NULL},              // after net
 	{ "cp",      cp_init,      NULL, NULL},
+#if CONFIG_STATS
+	{ "stats", stats_init, stats_init_cpu, NULL},
+#endif
 	{ "pci",     init_pci,     NULL, NULL},
 	{ "dpdk",    dpdk_init,    NULL, NULL},
 	{ "ethdev",  init_ethdev,  NULL, NULL},
