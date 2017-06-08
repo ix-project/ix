@@ -27,8 +27,14 @@
 
 #pragma once
 
+#define CONFIG_DEBUG_SPIN_LOCK 0
+
 #include <asm/cpu.h>
 #include <ix/types.h>
+#if __KERNEL__ && CONFIG_DEBUG_SPIN_LOCK
+#include <ix/timer.h>
+#include <ix/log.h>
+#endif
 
 #define SPINLOCK_INITIALIZER {.locked = 0}
 #define DEFINE_SPINLOCK(name) \
@@ -51,8 +57,19 @@ static inline void spin_lock_init(spinlock_t *l)
  */
 static inline void spin_lock(spinlock_t *l)
 {
+#if __KERNEL__ && CONFIG_DEBUG_SPIN_LOCK
+	long start = rdtsc();
+	long deadline = start + ONE_MS * cycles_per_us;
+#endif
+
 	while (__sync_lock_test_and_set(&l->locked, 1)) {
 		while (l->locked) {
+#if __KERNEL__ && CONFIG_DEBUG_SPIN_LOCK
+			if (unlikely(rdtsc() > deadline)) {
+				here: log_err("slow spin_lock (%ld us) at %p called from %p\n", (rdtsc() - start) / cycles_per_us, &&here, __builtin_return_address(0));
+				deadline += (long) ONE_SECOND * cycles_per_us;
+			}
+#endif
 			cpu_relax();
 		}
 	}
