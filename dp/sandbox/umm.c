@@ -214,7 +214,7 @@ unsigned long umm_mmap(void *addr, size_t len, int prot,
 		return -EINVAL;
 
 	if (flags & MAP_ANONYMOUS) {
-		ret = umm_mmap_anom(addr, len, prot, 0);
+		ret = umm_mmap_anom(addr, len, prot, flags & MAP_HUGETLB);
 		if (ret)
 			return ret;
 	} else if (fd > 0) {
