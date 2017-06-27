@@ -144,6 +144,12 @@ static inline int __mempool_get_sanity(void *a)
 #define MEMPOOL_SANITY_LINK(_a, _b)
 #endif
 
+#define MEMPOOL_DEBUG 0
+
+#if MEMPOOL_DEBUG
+#define POISON_INUSE 0xcc
+#define POISON_FREE 0xcd
+#endif
 
 /**
  * mempool_alloc - allocates an element from a memory pool
@@ -155,14 +161,31 @@ extern void *mempool_alloc_2(struct mempool *m);
 static inline void *mempool_alloc(struct mempool *m)
 {
 	struct mempool_hdr *h = m->head;
+	void *ret;
 
 	if (likely(h)) {
 		m->head = h->next;
 		m->num_free--;
-		return (void *) h;
+		ret = (void *) h;
 	} else {
-		return mempool_alloc_2(m);
+		ret = mempool_alloc_2(m);
 	}
+
+#if MEMPOOL_DEBUG
+	for (int i = sizeof(struct mempool_hdr); i < m->elem_len; i++) {
+		if (((uint8_t *)ret)[i] != POISON_FREE) {
+			log_err("mempool element poison mismatch: %s size %d offset %d ptr %p\n", m->datastore->prettyname, m->elem_len, i, ret);
+			log_err("data: ");
+			for (int j = sizeof(struct mempool_hdr); j < m->elem_len; j++)
+				log_cont("%s%x%s ", j == i ? "<" : "", ((uint8_t *)ret)[j], j == i ? ">" : "");
+			log_cont("\n");
+			assert(0);
+		}
+	}
+	memset(ret, POISON_INUSE, m->elem_len);
+#endif
+
+	return ret;
 }
 
 /**
@@ -177,6 +200,20 @@ static inline void mempool_free(struct mempool *m, void *ptr)
 {
 	struct mempool_hdr *elem = (struct mempool_hdr *) ptr;
 	MEMPOOL_SANITY_ACCESS(ptr);
+
+#if MEMPOOL_DEBUG
+	struct mempool_hdr *p = m->head;
+	while (p) {
+here:
+		if (p == elem) {
+			log_err("mempool double free: %s ptr %p callstack %lx %lx\n", m->datastore->prettyname, p, &&here, __builtin_return_address(0));
+			assert(0);
+		}
+		p = p->next;
+	}
+
+	memset(ptr, POISON_FREE, m->elem_len);
+#endif
 
 	if (likely(m->num_free < m->chunk_size)) {
 		m->num_free++;

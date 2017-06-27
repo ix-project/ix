@@ -238,6 +238,10 @@ int mempool_create_datastore(struct mempool_datastore *mds, int nr_elems, size_t
 		return -ENOMEM;
 	}
 
+#if MEMPOOL_DEBUG
+	memset(mds->buf, POISON_FREE, mds->nr_pages * PGSIZE_2MB);
+#endif
+
 	if (nostraddle) {
 		int elems_per_page = PGSIZE_2MB / elem_len;
 		mempool_init_buf_with_pages(mds, elems_per_page, nr_pages, elem_len);
