@@ -251,10 +251,11 @@ int mempool_create_datastore(struct mempool_datastore *mds, int nr_elems, size_t
 	mds->next_ds = mempool_all_datastores;
 	mempool_all_datastores = mds;
 
-	printf("mempool_datastore: %-15s pages:%4u elem_len:%4lu nostraddle:%d chunk_size:%d num_chunks:4%d\n",
+	printf("mempool_datastore: %-15s pages:%4u elem_len:%4lu nostraddle:%d chunk_size:%d num_chunks:4%d [%p-%p]\n",
 	       name,
 	       nr_pages,
-	       mds->elem_len, mds->nostraddle, mds->chunk_size, mds->num_chunks);
+	       mds->elem_len, mds->nostraddle, mds->chunk_size, mds->num_chunks,
+	       mds->buf, mds->buf + nr_pages * PGSIZE_2MB);
 
 	return 0;
 }
