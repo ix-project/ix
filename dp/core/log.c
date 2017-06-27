@@ -49,6 +49,14 @@ void logk(int level, const char *fmt, ...)
 	time_t ts;
 	off_t off = 0;
 
+	if (level == LOG_CONT) {
+		va_start(ptr, fmt);
+		vprintf(fmt, ptr);
+		va_end(ptr);
+
+		return;
+	}
+
 	if (level > max_loglevel)
 		return;
 

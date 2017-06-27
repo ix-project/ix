@@ -42,6 +42,7 @@ enum {
 	LOG_WARN	= 3, /* warning */
 	LOG_INFO	= 4, /* informational */
 	LOG_DEBUG	= 5, /* debug */
+	LOG_CONT	= 6, /* continuation */
 };
 
 #define log_emerg(fmt, ...) logk(LOG_EMERG, fmt, ##__VA_ARGS__)
@@ -49,6 +50,7 @@ enum {
 #define log_err(fmt, ...) logk(LOG_ERR, fmt, ##__VA_ARGS__)
 #define log_warn(fmt, ...) logk(LOG_WARN, fmt, ##__VA_ARGS__)
 #define log_info(fmt, ...) logk(LOG_INFO, fmt, ##__VA_ARGS__)
+#define log_cont(fmt, ...) logk(LOG_CONT, fmt, ##__VA_ARGS__)
 
 #ifdef DEBUG
 #define log_debug(fmt, ...) logk(LOG_DEBUG, fmt, ##__VA_ARGS__)
