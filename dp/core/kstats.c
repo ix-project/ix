@@ -162,6 +162,7 @@ static void kstats_print(struct timer *t, struct eth_fg *none)
 	uint64_t total_cycles = (uint64_t) cycles_per_us * KSTATS_INTERVAL;
 	char batch_histogram[2048], backlog_histogram[2048];
 	int avg_batch, avg_backlog;
+	uint64_t total_occ = 0;
 
 	histogram_to_str(percpu_get(_kstats_batch_histogram), KSTATS_BATCH_HISTOGRAM_SIZE, batch_histogram, &avg_batch);
 	histogram_to_str(percpu_get(_kstats_backlog_histogram), KSTATS_BACKLOG_HISTOGRAM_SIZE, backlog_histogram, &avg_backlog);
@@ -182,6 +183,18 @@ static void kstats_print(struct timer *t, struct eth_fg *none)
 #undef DEF_KSTATS
 #define DEF_KSTATS(_c)  kstats_printone(&ks->_c, # _c, total_cycles);
 #include <ix/kstatvectors.h>
+
+#undef DEF_KSTATS
+#undef DEF_KSTATS_COUNTER
+#define DEF_KSTATS(_c)  total_occ += ks->_c.tot_occ;
+#define DEF_KSTATS_COUNTER(_c)
+#include <ix/kstatvectors.h>
+
+	log_info("kstat: %2d %-30s %9lu %2d%%\n",
+		 percpu_get(cpu_id),
+		 "-- REST --",
+		 0,
+		 max(0, (int64_t)(total_cycles - total_occ)) * 100 / total_cycles);
 	log_info("\n");
 
 	KSTATS_VECTOR(print_kstats);
