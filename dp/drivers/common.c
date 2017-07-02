@@ -220,7 +220,7 @@ int driver_init(struct pci_dev *pci_dev, struct ix_rte_eth_dev **ethp)
 	conf.fdir_conf.flex_conf.nb_payloads = 0;
 	conf.fdir_conf.flex_conf.nb_flexmasks = 0;
 
-	ret = rte_eth_dev_configure(port, dev_info.max_rx_queues, dev_info.max_tx_queues, &conf);
+	ret = rte_eth_dev_configure(port, CFG.num_cpus, CFG.num_cpus, &conf);
 	if (ret < 0)
 		return ret;
 
