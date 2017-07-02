@@ -311,30 +311,34 @@ int init_do_spawn(void *arg)
 static int init_fg_cpu(void)
 {
 	int fg_id, ret;
-	int start;
+	int start, i;
 	DEFINE_BITMAP(fg_bitmap, ETH_MAX_TOTAL_FG);
 
 	start = percpu_get(cpu_nr);
 
 	bitmap_init(fg_bitmap, ETH_MAX_TOTAL_FG, 0);
-	for (fg_id = start; fg_id < nr_flow_groups; fg_id += CFG.num_cpus)
-		bitmap_set(fg_bitmap, fg_id);
+	for (i = 0; i < CFG.num_ethdev; i++) {
+		for (fg_id = i * ETH_MAX_NUM_FG + start; fg_id < i * ETH_MAX_NUM_FG + nr_flow_groups; fg_id += CFG.num_cpus)
+			bitmap_set(fg_bitmap, fg_id);
+	}
 
 	eth_fg_assign_to_cpu(fg_bitmap, percpu_get(cpu_nr));
 
-	for (fg_id = start; fg_id < nr_flow_groups; fg_id += CFG.num_cpus) {
-		eth_fg_set_current(fgs[fg_id]);
+	for (i = 0; i < CFG.num_ethdev; i++) {
+		for (fg_id = i * ETH_MAX_NUM_FG + start; fg_id < i * ETH_MAX_NUM_FG + nr_flow_groups; fg_id += CFG.num_cpus) {
+			eth_fg_set_current(fgs[fg_id]);
 
-		assert(fgs[fg_id]->cur_cpu == percpu_get(cpu_id));
+			assert(fgs[fg_id]->cur_cpu == percpu_get(cpu_id));
 
-		tcp_init(fgs[fg_id]);
-		ret = tcp_api_init_fg();
-		if (ret) {
-			log_err("init: failed to initialize tcp_api \n");
-			return ret;
+			tcp_init(fgs[fg_id]);
+			ret = tcp_api_init_fg();
+			if (ret) {
+				log_err("init: failed to initialize tcp_api \n");
+				return ret;
+			}
+
+			timer_init_fg();
 		}
-
-		timer_init_fg();
 	}
 
 	unset_current_fg();
@@ -417,7 +421,6 @@ static int init_hw(void)
 			usleep(100);
 	}
 
-	fg_id = 0;
 	for (i = 0; i < CFG.num_ethdev; i++) {
 		struct ix_rte_eth_dev *eth = eth_dev[i];
 
@@ -430,6 +433,7 @@ static int init_hw(void)
 			return ret;
 		}
 
+		fg_id = i * ETH_MAX_NUM_FG;
 		for (j = 0; j < eth->data->nb_rx_fgs; j++) {
 			eth_fg_init_cpu(&eth->data->rx_fgs[j]);
 			fgs[fg_id] = &eth->data->rx_fgs[j];
@@ -439,7 +443,7 @@ static int init_hw(void)
 		}
 	}
 
-	nr_flow_groups = fg_id;
+	nr_flow_groups = eth_dev[0]->data->nb_rx_fgs;
 	cp_shmem->nr_flow_groups = nr_flow_groups;
 
 	mempool_init();
