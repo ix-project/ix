@@ -91,11 +91,11 @@ static struct init_vector_t init_tbl[] = {
 	{ "cfg",     init_cfg,     NULL, NULL},              // after net
 	{ "cp",      cp_init,      NULL, NULL},
 	{ "dpdk",    dpdk_init,    NULL, NULL},
+	{ "ethdev",  init_ethdev,  NULL, NULL},
 	{ "firstcpu", init_firstcpu, NULL, NULL},             // after cfg
 	{ "mbuf",    mbuf_init,    mbuf_init_cpu, NULL},      // after firstcpu
 	{ "memp",    memp_init,    memp_init_cpu, NULL},
 	{ "tcpapi",  tcp_api_init, tcp_api_init_cpu, NULL},
-	{ "ethdev",  init_ethdev,  NULL, NULL},
 	{ "migration", NULL, init_migration_cpu, NULL},
 	{ "hw",      init_hw,      NULL, NULL},               // spaws per-cpu init sequence
 	{ "syscall", NULL,         syscall_init_cpu, NULL},
