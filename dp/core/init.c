@@ -61,6 +61,7 @@ static int init_cfg(void);
 static int init_firstcpu(void);
 static int init_hw(void);
 static int init_network_cpu(void);
+static int init_pci(void);
 static int init_ethdev(void);
 
 extern int net_init(void);
@@ -90,6 +91,7 @@ static struct init_vector_t init_tbl[] = {
 	{ "net",     net_init,     NULL, NULL},
 	{ "cfg",     init_cfg,     NULL, NULL},              // after net
 	{ "cp",      cp_init,      NULL, NULL},
+	{ "pci",     init_pci,     NULL, NULL},
 	{ "dpdk",    dpdk_init,    NULL, NULL},
 	{ "ethdev",  init_ethdev,  NULL, NULL},
 	{ "firstcpu", init_firstcpu, NULL, NULL},             // after cfg
@@ -113,6 +115,8 @@ static int args_parsed;
 
 volatile int uaccess_fault;
 
+static struct pci_dev *pci_devices[CFG_MAX_ETHDEV];
+
 static void
 pgflt_handler(uintptr_t addr, uint64_t fec, struct dune_tf *tf)
 {
@@ -133,22 +137,13 @@ pgflt_handler(uintptr_t addr, uint64_t fec, struct dune_tf *tf)
 	}
 }
 
-/**
- * init_ethdev - initializes an ethernet device
- * @pci_addr: the PCI address of the device
- *
- * FIXME: For now this is IXGBE-specific.
- *
- * Returns 0 if successful, otherwise fail.
- */
-static int init_ethdev(void)
+static int init_pci(void)
 {
 	int ret;
 	int i;
 	for (i = 0; i < CFG.num_ethdev; i++) {
 		const struct pci_addr *addr = &CFG.ethdev[i];
 		struct pci_dev *dev;
-		struct ix_rte_eth_dev *eth;
 
 		dev = pci_alloc_dev(addr);
 		if (!dev)
@@ -168,10 +163,31 @@ static int init_ethdev(void)
 			goto err;
 		}
 
-		ret = driver_init(dev, &eth);
+		pci_devices[i] = dev;
+	}
+
+err:
+	return ret;
+}
+
+/**
+ * init_ethdev - initializes an ethernet device
+ * @pci_addr: the PCI address of the device
+ *
+ * FIXME: For now this is IXGBE-specific.
+ *
+ * Returns 0 if successful, otherwise fail.
+ */
+static int init_ethdev(void)
+{
+	int ret;
+	int i;
+	for (i = 0; i < CFG.num_ethdev; i++) {
+		struct ix_rte_eth_dev *eth;
+
+		ret = driver_init(pci_devices[i], &eth);
 		if (ret) {
 			log_err("init: failed to start driver\n");
-			free(dev);
 			goto err;
 		}
 
