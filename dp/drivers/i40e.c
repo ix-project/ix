@@ -299,8 +299,6 @@ static int dev_start(struct ix_rte_eth_dev *dev)
 			log_err("Failed to switch on LAN RX queue\n");
 			return ret;
 		}
-
-		rte_eth_dev_start(dev->port);
 	}
 
 	return 0;
