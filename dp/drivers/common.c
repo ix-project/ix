@@ -93,97 +93,6 @@ struct drv_init_tble drv_init_tbl[] = {
 	{ NULL, NULL }
 };
 
-static int rte_eal_pci_probe_one_driver(struct rte_pci_driver *dr, struct rte_pci_device *dev)
-{
-	const struct rte_pci_id *id_table;
-	int pipefd[2];
-
-	for (id_table = dr->id_table; id_table->vendor_id != 0; id_table++) {
-
-		/* check if device's identifiers match the driver's ones */
-		if (id_table->vendor_id != dev->id.vendor_id &&
-			id_table->vendor_id != PCI_ANY_ID)
-			continue;
-		if (id_table->device_id != dev->id.device_id &&
-			id_table->device_id != PCI_ANY_ID)
-			continue;
-		if (id_table->subsystem_vendor_id != dev->id.subsystem_vendor_id &&
-			id_table->subsystem_vendor_id != PCI_ANY_ID)
-			continue;
-		if (id_table->subsystem_device_id != dev->id.subsystem_device_id &&
-			id_table->subsystem_device_id != PCI_ANY_ID)
-			continue;
-
-		struct rte_pci_addr *loc = &dev->addr;
-
-		RTE_LOG(DEBUG, EAL, "PCI device "PCI_PRI_FMT" on NUMA socket %i\n",
-			loc->domain, loc->bus, loc->devid, loc->function,
-			dev->numa_node);
-
-		RTE_LOG(DEBUG, EAL, "  probe driver: %x:%x %s\n", dev->id.vendor_id,
-			dev->id.device_id, dr->name);
-
-		/* reference driver structure */
-		dev->driver = dr;
-
-		/* use a fake source for uio (interrupts) */
-		if (pipe(pipefd))
-			return 0;
-
-		dev->intr_handle.fd = pipefd[1];
-		dev->intr_handle.type = RTE_INTR_HANDLE_UIO;
-
-		/* call the driver devinit() function */
-		return dr->devinit(dr, dev);
-	}
-	/* return positive value if driver is not found */
-	return 1;
-}
-
-static int dpdk_devinit(struct pci_dev *pci_dev, struct rte_pci_driver **found_driver)
-{
-	int ret;
-	struct rte_pci_device *dpdk_pci_dev = NULL;
-	struct rte_pci_addr addr;
-	struct rte_pci_driver *driver;
-
-	addr.domain = pci_dev->addr.domain;
-	addr.bus = pci_dev->addr.bus;
-	addr.devid = pci_dev->addr.slot;
-	addr.function = pci_dev->addr.func;
-
-	*found_driver = NULL;
-
-	TAILQ_FOREACH(dpdk_pci_dev, &pci_device_list, next) {
-		if (rte_eal_compare_pci_addr(&dpdk_pci_dev->addr, &addr))
-			continue;
-
-		dpdk_pci_dev->mem_resource[0].addr = pci_map_mem_bar(pci_dev, &pci_dev->bars[0], 0);
-
-		TAILQ_FOREACH(driver, &pci_driver_list, next) {
-			ret = rte_eal_pci_probe_one_driver(driver, dpdk_pci_dev);
-
-			if (ret < 0) {
-				/* negative value is an error */
-				return -1;
-			} else if (ret > 0) {
-				/* positive value means driver not found */
-				continue;
-			}
-
-			/* driver found */
-			*found_driver = driver;
-			return 0;
-		}
-
-		/* driver not found */
-		return -1;
-	}
-
-	/* device not found */
-	return -1;
-}
-
 static enum rte_eth_rx_mq_mode translate_conf_rxmode_mq_mode(enum ix_rte_eth_rx_mq_mode in)
 {
 	switch (in) {
@@ -266,15 +175,23 @@ int driver_init(struct pci_dev *pci_dev, struct ix_rte_eth_dev **ethp)
 	struct ix_rte_eth_dev *dev;
 	struct rte_eth_dev_info dev_info;
 	struct rte_eth_conf conf;
-	struct rte_pci_driver *driver;
 	struct drv_init_tble *dpdk_drv;
 	uint8_t port;
+	struct rte_pci_addr *eth_pci_addr;
 
-	port = rte_eth_dev_find_free_port();
+	for (port = 0; port < rte_eth_dev_count(); port++) {
+		if (rte_eth_devices[port].pci_dev == NULL)
+			continue;
 
-	ret = dpdk_devinit(pci_dev, &driver);
-	if (ret < 0)
-		return ret;
+		eth_pci_addr = &rte_eth_devices[port].pci_dev->addr;
+
+		if (pci_dev->addr.bus == eth_pci_addr->bus &&
+		    pci_dev->addr.slot == eth_pci_addr->devid &&
+		    pci_dev->addr.domain == eth_pci_addr->domain &&
+		    pci_dev->addr.func == eth_pci_addr->function)
+			break;
+	}
+	assert(port < rte_eth_dev_count());
 
 	rte_eth_dev_info_get(port, &dev_info);
 
@@ -308,7 +225,7 @@ int driver_init(struct pci_dev *pci_dev, struct ix_rte_eth_dev **ethp)
 		return ret;
 
 	for (dpdk_drv = drv_init_tbl; dpdk_drv->name != NULL; dpdk_drv++) {
-		if (strcmp(driver->name, dpdk_drv->name))
+		if (strcmp(dev_info.driver_name, dpdk_drv->name))
 			continue;
 		ret = dpdk_drv->init_fn(dev, dpdk_drv->name);
 		if (ret < 0)
