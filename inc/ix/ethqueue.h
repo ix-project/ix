@@ -163,8 +163,12 @@ static inline int eth_send(struct eth_tx_queue *txq, struct mbuf *mbuf)
 {
 	int nr = 1 + mbuf->nr_iov;
 	if (unlikely(nr > txq->cap)) {
-		log_err("eth_send failed\n");
-		return -EBUSY;
+		log_info("eth_send full. will try to reclaim.\n");
+		txq->cap = eth_tx_reclaim(txq);
+		if (unlikely(nr > txq->cap)) {
+			log_err("eth_send failed\n");
+			return -EBUSY;
+		}
 	}
 
 	txq->bufs[txq->len++] = mbuf;
