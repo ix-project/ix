@@ -85,10 +85,20 @@ int init_migration_cpu(void)
  */
 void eth_fg_init(struct eth_fg *fg, unsigned int idx)
 {
+	int i;
+
 	fg->perfg = NULL;
 	fg->idx = idx;
 	fg->cur_cpu = -1;
 	fg->in_transition = false;
+	hlist_init_head(&fg->active_buckets);
+	hlist_init_head(&fg->tw_pcbs);
+	hlist_init_head(&fg->bound_pcbs);
+	for (i = 0; i < TCP_ACTIVE_PCBS_MAX_BUCKETS; i++) {
+		hlist_init_head(&fg->active_tbl[i].pcbs);
+		fg->active_tbl[i].hash_link.prev = NULL;
+		fg->active_tbl[i].hash_link.next = NULL;
+	}
 	spin_lock_init(&fg->lock);
 }
 
