@@ -36,9 +36,14 @@
 #include <rte_ethdev.h>
 #include <rte_mbuf.h>
 
+/* Defines from IX override DPDK */
+#undef likely
+#undef unlikely
+
 /* IX includes */
 #include <ix/log.h>
 #include <ix/dpdk.h>
+#include <ix/cfg.h>
 
 struct rte_mempool *dpdk_pool;
 
@@ -52,11 +57,16 @@ int dpdk_init(void)
 	int ret;
 	/* -m stands for memory in MBs that DPDK will allocate. Must be enough
 	 * to accommodate the pool_size defined below. */
-	char *argv[] = { "./ix", "-m", "148", "-l", "0" };
+	char cpu_id_str[8];
+	char *argv[] = { "./ix", "-m", "148", "-l", cpu_id_str };
 	const int pool_buffer_size = 0;
 	const int pool_cache_size = 0;
 	/* pool_size sets an implicit limit on cores * NICs that DPDK allows */
 	const int pool_size = 32768;
+
+	/* We want to place DPDK in the desired NUMA node. Otherwise, its memory
+	 * allocations will fail. */
+	sprintf(cpu_id_str, "%d", CFG.cpu[0]);
 
 	optind = 0;
 	ret = rte_eal_init(sizeof(argv) / sizeof(argv[0]), argv);
