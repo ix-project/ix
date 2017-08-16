@@ -85,8 +85,8 @@ struct init_vector_t {
 
 
 static struct init_vector_t init_tbl[] = {
-	{ "CPU",     cpu_init,     NULL, NULL},
 	{ "Dune",    init_dune,    NULL, NULL},
+	{ "CPU",     cpu_init,     NULL, NULL},
 	{ "timer",   timer_init,   timer_init_cpu, NULL},
 	{ "net",     net_init,     NULL, NULL},
 	{ "cfg",     init_cfg,     NULL, NULL},              // after net

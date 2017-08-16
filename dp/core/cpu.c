@@ -36,6 +36,7 @@
 #include <ix/log.h>
 #include <ix/cpu.h>
 #include <ix/mem.h>
+#include <ix/mempool.h>
 
 int cpu_count;
 int cpus_active;
@@ -65,6 +66,12 @@ struct cpu_runlist {
 
 static DEFINE_PERCPU(struct cpu_runlist, runlist);
 
+static struct mempool_datastore runners_datastore;
+
+#define MAX_RUNNERS 1024
+
+static DEFINE_PERCPU(struct mempool, runners_mempool);
+
 /**
  * cpu_run_on_one - calls a function on the specified CPU
  * @func: the function to call
@@ -81,7 +88,7 @@ int cpu_run_on_one(cpu_func_t func, void *data, unsigned int cpu)
 	if (cpu >= cpu_count)
 		return -EINVAL;
 
-	runner = malloc(sizeof(*runner));
+	runner = mempool_alloc(&percpu_get(runners_mempool));
 	if (!runner)
 		return -ENOMEM;
 
@@ -117,7 +124,7 @@ void cpu_do_bookkeeping(void)
 			struct cpu_runner *last = runner;
 			runner->func(runner->data);
 			runner = runner->next;
-			free(last);
+			mempool_free(&percpu_get(runners_mempool), last);
 		} while (runner);
 	}
 }
@@ -193,6 +200,11 @@ int cpu_init_one(unsigned int cpu)
 	percpu_get(cpu_numa_node) = numa_node;
 	log_is_early_boot = false;
 
+	ret = mempool_create(&percpu_get(runners_mempool), &runners_datastore,
+			     MEMPOOL_SANITY_PERCPU, percpu_get(cpu_id));
+	if (ret)
+		return ret;
+
 	log_info("cpu: started core %d, numa node %d\n", cpu, numa_node);
 
 	return 0;
@@ -205,12 +217,20 @@ int cpu_init_one(unsigned int cpu)
  */
 int cpu_init(void)
 {
+	int ret;
+
 	cpu_count = sysconf(_SC_NPROCESSORS_CONF);
 
 	if (cpu_count <= 0 || cpu_count > NCPU)
 		return -EINVAL;
 
 	log_info("cpu: detected %d cores\n", cpu_count);
+
+	ret = mempool_create_datastore(&runners_datastore, MAX_RUNNERS,
+		sizeof(struct cpu_runner), 0, MEMPOOL_DEFAULT_CHUNKSIZE,
+		"runners");
+	if (ret)
+		return ret;
 
 	return 0;
 }

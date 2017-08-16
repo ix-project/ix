@@ -122,4 +122,3 @@ extern int cpu_run_on_one(cpu_func_t func, void *data,
 
 extern int cpu_init_one(unsigned int cpu);
 extern int cpu_init(void);
-
