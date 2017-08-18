@@ -470,7 +470,7 @@ static err_t on_accept(struct eth_fg *cur_fg, void *arg, struct tcp_pcb *pcb, er
 	tcp_sent(pcb, on_sent);
 #endif
 
-	id->src_ip = 0; /* FIXME: LWIP doesn't provide this information :( */
+	id->src_ip = ntoh32(pcb->remote_ip.addr);
 	id->dst_ip = CFG.host_addr.addr;
 	id->src_port = pcb->remote_port;
 	id->dst_port = pcb->local_port;
