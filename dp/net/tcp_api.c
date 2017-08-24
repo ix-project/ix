@@ -472,8 +472,8 @@ static err_t on_accept(struct eth_fg *cur_fg, void *arg, struct tcp_pcb *pcb, er
 
 	id->src_ip = 0; /* FIXME: LWIP doesn't provide this information :( */
 	id->dst_ip = CFG.host_addr.addr;
-	id->src_port = pcb->local_port;
-	id->dst_port = pcb->remote_port;
+	id->src_port = pcb->remote_port;
+	id->dst_port = pcb->local_port;
 	api->id = id;
 	handle = tcpapi_to_handle(cur_fg, api);
 	api->handle = handle;
