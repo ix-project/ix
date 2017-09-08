@@ -32,13 +32,11 @@
 
 #include <stdio.h>
 #include <strings.h>
-#include <unistd.h>
 #include <linux/perf_event.h>
-#include <sys/ioctl.h>
-#include <sys/syscall.h>
 #include <ix/kstats.h>
 #include <ix/log.h>
 #include <ix/timer.h>
+#include <ix/perf.h>
 
 #define KSTATS_INTERVAL (5 * ONE_SECOND)
 
@@ -142,18 +140,6 @@ static void histogram_to_str(int *histogram, int size, char *buffer, int *avg)
 		*avg = -1;
 }
 
-static long long read_perf_event(int fd)
-{
-	int ret;
-	long long value;
-
-	ret = read(fd, &value, sizeof(long long));
-	if (ret != sizeof(long long))
-		value = -1;
-	ioctl(fd, PERF_EVENT_IOC_RESET, 0);
-	return value;
-}
-
 /*
  * print and reinitialize
  */
@@ -204,22 +190,6 @@ static void kstats_print(struct timer *t, struct eth_fg *none)
 	percpu_get(_kstats_packets) = 0;
 
 	timer_add(&percpu_get(_kstats_timer), NULL, KSTATS_INTERVAL);
-}
-
-static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags)
-{
-	return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
-}
-
-static int init_perf_event(struct perf_event_attr *attr)
-{
-	int fd;
-
-	attr->size = sizeof(struct perf_event_attr);
-	fd = perf_event_open(attr, 0, -1, -1, 0);
-	ioctl(fd, PERF_EVENT_IOC_RESET, 0);
-	ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-	return fd;
 }
 
 int kstats_init_cpu(void)
