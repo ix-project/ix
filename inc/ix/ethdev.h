@@ -222,7 +222,7 @@ struct ix_rte_eth_rss_conf {
 #define ETH_RSS_IPV6_UDP    0x0080 /**< IPv6/UDP packet. */
 #define ETH_RSS_IPV6_UDP_EX 0x0100 /**< IPv6/UDP with extension headers. */
 /* Definitions used for redirection table */
-#define ETH_RSS_RETA_MAX_QUEUE		16 /**< Use one RX queue per thread, 16 HTs on our servers */
+#define ETH_RSS_RETA_MAX_QUEUE		38 /**< Use one RX queue per thread, 16 HTs on our servers */
 
 /* Definitions used for VMDQ and DCB functionality */
 #define ETH_VMDQ_MAX_VLAN_FILTERS   64 /**< Maximum nb. of VMDQ vlan filters. */
