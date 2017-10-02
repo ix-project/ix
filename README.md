@@ -22,7 +22,7 @@ There is currently no binary distribution of IX. You will therefore have to comp
 
 1. fetch the dependencies:
    ```
-   ./deps/fetch-deps.sh
+   git submodule update --init
    ```
 
 2. build the dependecies:
