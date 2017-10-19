@@ -1,9 +1,9 @@
 [submodule "deps/dune"]
 	path = deps/dune
-	url = git@github.com:ix-project/dune.git
+	url = https://github.com/ix-project/dune.git
 [submodule "deps/pcidma"]
 	path = deps/pcidma
-	url = git@github.com:ix-project/pcidma.git
+	url = https://github.com/ix-project/pcidma.git
 [submodule "deps/dpdk"]
 	path = deps/dpdk
-	url = git://dpdk.org/dpdk
+	url = http://dpdk.org/git/dpdk
